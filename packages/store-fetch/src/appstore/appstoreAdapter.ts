@@ -68,10 +68,22 @@ export class AppStoreAdapter implements StoreReferenceAdapter {
         .map((match) => match[0].replace(/\\u002F/g, "/"))
         .filter((url) => {
           const lower = url.toLowerCase();
-          return (lower.includes("iphone") || lower.includes("ipad")) && !lower.includes("appicon") && !lower.includes("placeholder");
+          if (lower.includes("appicon") || lower.includes("/features") || lower.includes("1200x630")) return false;
+          const isStoreScreenshot =
+            lower.includes("iphone") ||
+            lower.includes("ipad") ||
+            lower.includes("appstore") ||
+            /\/(?:\d{3,4})x(?:\d{3,4})bb/.test(lower);
+          const isSmallArtwork = /\/(?:48|96|157|200|230|300|314|400|460)x(?:48|96|157|200|230|300|314|400|460|498|650|680|996)bb/.test(lower);
+          return isStoreScreenshot && !isSmallArtwork;
         })
-        .map((url) => url.replace(/\/\d+x\d+bb[^/"]*$/i, "/600x1298bb.webp"));
-      return Array.from(new Set(urls)).slice(0, 6);
+        .map((url) => url.replace(/\/(?:\d+x\d+|\{w\}x\{h\})[^/"]*$/i, "/600x1298bb.webp"));
+      const bySource = new Map<string, string>();
+      for (const url of urls) {
+        const sourceKey = url.replace(/\/600x1298bb\.webp$/i, "");
+        if (!bySource.has(sourceKey)) bySource.set(sourceKey, url);
+      }
+      return [...bySource.values()].slice(0, 6);
     } catch {
       return [];
     }
