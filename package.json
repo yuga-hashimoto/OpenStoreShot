@@ -2,7 +2,7 @@
   "name": "openstoreshot",
   "version": "0.1.0",
   "private": true,
-  "description": "Codex-native OSS studio for Android and iOS store screenshots.",
+  "description": "Local-agent OSS studio for Android and iOS store screenshots.",
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@9.15.4",

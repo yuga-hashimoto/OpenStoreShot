@@ -55,6 +55,7 @@ pnpm demo
 Open `http://127.0.0.1:3100`.
 
 For the full first-run guide, see [docs/QUICKSTART.md](docs/QUICKSTART.md).
+For choosing Codex or another local agent, see [docs/AGENT_SETUP.md](docs/AGENT_SETUP.md).
 
 Useful commands:
 
@@ -80,6 +81,8 @@ OpenStoreShot itself is not a cloud AI product. The intended loop is:
 6. Reopen the studio to inspect the updated images.
 
 OpenStoreShot does not require an image generation API key. Placeholder generation is local and deterministic for demos, tests, and CI. Real asset generation should happen through the local Codex workflow or other local tools chosen by the user.
+
+`pnpm run doctor` detects supported local agent CLIs on `PATH` and recommends Codex when available.
 
 ## Architecture
 

@@ -22,6 +22,7 @@
 - Research and product docs under `docs/`.
 - OSS growth foundation: screenshot-backed README, Japanese README, `CONTRIBUTING.md`, `docs/I18N.md`, GitHub Actions CI, issue templates, and PR template.
 - Simplified onboarding: `pnpm run doctor`, `pnpm demo`, `pnpm quality`, `pnpm validate:demo`, `pnpm render:demo`, plus `docs/QUICKSTART.md`.
+- Open Design-inspired agent setup guide: `docs/AGENT_SETUP.md` plus `pnpm run doctor` detection for local agent CLIs without making Codex a product requirement.
 - Store image playbook documenting the reusable lessons from the four primary reference OSS projects.
 
 ## Mock or fixture behavior

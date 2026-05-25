@@ -20,7 +20,7 @@ OpenStoreShot should be the review and control surface for store assets:
 - The app stores that correction in `.storeshot/codex-requests.jsonl`.
 - Codex reads the queue, applies the change, validates, renders, and reports back.
 
-This keeps API keys out of the app and matches Codex-native usage.
+This keeps API keys out of the app and matches local-agent usage.
 
 ## License note
 

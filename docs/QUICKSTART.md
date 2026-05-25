@@ -25,6 +25,7 @@ http://127.0.0.1:3100
 - demo project presence
 - web app presence
 - Codex skill presence
+- local AI agent CLI presence, if one is installed
 
 ## First Useful Commands
 
@@ -54,3 +55,5 @@ OpenStoreShot is designed so Codex can work on real local files:
 - validation command: `pnpm validate:demo`
 
 The app is the visual review surface. Codex edits local files and runs the commands.
+
+For agent selection, PATH troubleshooting, and first agent prompts, see [AGENT_SETUP.md](AGENT_SETUP.md).
