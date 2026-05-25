@@ -8,6 +8,11 @@
   "packageManager": "pnpm@9.15.4",
   "scripts": {
     "dev": "pnpm --filter @openstoreshot/web dev",
+    "demo": "pnpm --filter @openstoreshot/web dev -- -p 3100",
+    "doctor": "node scripts/doctor.mjs",
+    "quality": "pnpm lint && pnpm typecheck && pnpm test",
+    "validate:demo": "pnpm storeshot validate examples/demo-project/storeshot.project.json",
+    "render:demo": "pnpm storeshot render examples/demo-project/storeshot.project.json",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",

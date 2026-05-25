@@ -21,6 +21,8 @@
 - `AGENTS.md` and `.agents/skills/storeshot-designer/SKILL.md`.
 - Research and product docs under `docs/`.
 - OSS growth foundation: screenshot-backed README, Japanese README, `CONTRIBUTING.md`, `docs/I18N.md`, GitHub Actions CI, issue templates, and PR template.
+- Simplified onboarding: `pnpm run doctor`, `pnpm demo`, `pnpm quality`, `pnpm validate:demo`, `pnpm render:demo`, plus `docs/QUICKSTART.md`.
+- Store image playbook documenting the reusable lessons from the four primary reference OSS projects.
 
 ## Mock or fixture behavior
 
@@ -50,6 +52,9 @@ pnpm build
 pnpm e2e
 pnpm storeshot validate examples/demo-project/storeshot.project.json
 pnpm storeshot render examples/demo-project/storeshot.project.json
+pnpm run doctor
+pnpm validate:demo
+pnpm render:demo
 pnpm storeshot export examples/demo-project/storeshot.project.json --platform ios --locale ja-JP
 pnpm storeshot export examples/demo-project/storeshot.project.json --platform android --locale ja-JP
 pnpm storeshot imagegen background --project examples/demo-project/storeshot.project.json --slide slide-01 --style premium-gradient

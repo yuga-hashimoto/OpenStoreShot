@@ -23,16 +23,25 @@ OpenStoreShotは、Codexと一緒にApp Store / Google Play向けストア画像
 
 ## クイックスタート
 
+clone直後から起動まで:
+
 ```bash
+git clone https://github.com/yuga-hashimoto/OpenStoreShot.git
+cd OpenStoreShot
+corepack enable
 pnpm install
-pnpm dev
+pnpm run doctor
+pnpm demo
 ```
 
-Next.jsが表示したURLを開きます。通常は `http://127.0.0.1:3000` です。
+`http://127.0.0.1:3100` を開きます。
+
+詳しい初回手順は [docs/QUICKSTART.md](docs/QUICKSTART.md) を見てください。
 
 ```bash
-pnpm storeshot validate examples/demo-project/storeshot.project.json
-pnpm storeshot render examples/demo-project/storeshot.project.json
+pnpm validate:demo
+pnpm render:demo
+pnpm quality
 pnpm storeshot export examples/demo-project/storeshot.project.json --platform ios --locale ja-JP
 pnpm storeshot export examples/demo-project/storeshot.project.json --platform android --locale ja-JP
 ```

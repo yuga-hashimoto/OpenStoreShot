@@ -41,18 +41,27 @@ Store screenshots sit between brittle scripts and heavyweight design tools. Open
 
 ## Quick Start
 
+Fresh clone to running Studio:
+
 ```bash
+git clone https://github.com/yuga-hashimoto/OpenStoreShot.git
+cd OpenStoreShot
+corepack enable
 pnpm install
-pnpm dev
+pnpm run doctor
+pnpm demo
 ```
 
-Open the URL printed by Next.js, usually `http://127.0.0.1:3000`.
+Open `http://127.0.0.1:3100`.
+
+For the full first-run guide, see [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
 Useful commands:
 
 ```bash
-pnpm storeshot validate examples/demo-project/storeshot.project.json
-pnpm storeshot render examples/demo-project/storeshot.project.json
+pnpm validate:demo
+pnpm render:demo
+pnpm quality
 pnpm storeshot export examples/demo-project/storeshot.project.json --platform ios --locale ja-JP
 pnpm storeshot export examples/demo-project/storeshot.project.json --platform android --locale ja-JP
 pnpm storeshot ref appstore --country jp --feed top-free --limit 50
@@ -126,9 +135,8 @@ OpenStoreShot learns from these projects without copying their code or assets:
 - `YUZU-Hub/appscreen`: browser editor UX, background/text/device controls, export ergonomics.
 - `fastlane/fastlane`: deterministic automation, CI-minded snapshot/frame workflows.
 - `facundoolano/google-play-scraper`: replaceable Google Play metadata adapter pattern.
-- `nexu-io/open-design`: multilingual OSS docs, agent-driven local design loop, screenshot-heavy README, contributor scaffolding.
 
-See [docs/REFERENCE_OSS_AUDIT.md](docs/REFERENCE_OSS_AUDIT.md).
+See [docs/REFERENCE_OSS_AUDIT.md](docs/REFERENCE_OSS_AUDIT.md) and [docs/STORE_IMAGE_PLAYBOOK.md](docs/STORE_IMAGE_PLAYBOOK.md).
 
 ## Contributing
 

@@ -6,10 +6,11 @@ OpenStoreShot welcomes product, design, localization, renderer, and store-platfo
 
 ```bash
 pnpm install
-pnpm dev
+pnpm run doctor
+pnpm demo
 ```
 
-Open `http://127.0.0.1:3000` or the port printed by Next.js.
+Open `http://127.0.0.1:3100`.
 
 ## Quality Checks
 
@@ -20,8 +21,8 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-pnpm storeshot validate examples/demo-project/storeshot.project.json
-pnpm storeshot render examples/demo-project/storeshot.project.json
+pnpm validate:demo
+pnpm render:demo
 ```
 
 ## Contribution Areas
