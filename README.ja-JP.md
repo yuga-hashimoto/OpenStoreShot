@@ -1,6 +1,6 @@
 # OpenStoreShot
 
-OpenStoreShotは、Codexと一緒にApp Store / Google Play向けストア画像を確認・編集・検証・書き出しできる、ローカルファーストなOSSスタジオです。
+OpenStoreShotは、ローカルAI agentと一緒にApp Store / Google Play向けストア画像を確認・編集・検証・書き出しできる、ローカルファーストなOSSスタジオです。Codexを推奨デフォルトにしていますが、プロジェクトJSONとCLIはagent中立です。
 
 <p><a href="README.md">English</a> · <b>日本語</b> · <a href="docs/I18N.md">翻訳ガイド</a></p>
 
@@ -12,9 +12,17 @@ OpenStoreShotは、Codexと一緒にApp Store / Google Play向けストア画像
 - 実際に撮ったスクショをアップロードし、端末フレーム内へ配置できます。
 - AI生成画像やアップロード画像を、画像レイヤー・抽出色・背景図形オブジェクトに変換できます。
 - App Store / Google Playの参考情報を見て、構成や文字量だけを参考にできます。
-- Codexに自然言語で修正を依頼し、`storeshot.project.json` を編集、検証、書き出しできます。
+- Codexや他のローカルAI agentに自然言語で修正を依頼し、`storeshot.project.json` を編集、検証、書き出しできます。
 - iOS / Android向けのPNG/JPEGを書き出せます。
 - APIキーなしでローカル・デモ・CIが動きます。
+
+## 書き出せるもの
+
+- App Store向け iPhone縦長スクリーンショット。iPhone 6.9インチ縦長を含みます。
+- App Store向け iPad縦長スクリーンショット。
+- Google Play向け phone / 7インチtablet / 10インチtablet スクリーンショット。
+- Google Play feature graphic `1024x500`。
+- 同じプロジェクトJSONからPNG/JPEGを書き出せます。
 
 ## 画面
 
@@ -37,6 +45,8 @@ pnpm demo
 
 `http://127.0.0.1:3100` を開きます。
 
+必要なものはNode.js 20以上、Corepack経由のpnpm、ローカルブラウザです。OpenAIや画像生成APIキーは不要です。
+
 詳しい初回手順は [docs/QUICKSTART.md](docs/QUICKSTART.md) を見てください。
 ローカルagentの選び方は [docs/AGENT_SETUP.md](docs/AGENT_SETUP.md) を見てください。
 
@@ -48,15 +58,15 @@ pnpm storeshot export examples/demo-project/storeshot.project.json --platform io
 pnpm storeshot export examples/demo-project/storeshot.project.json --platform android --locale ja-JP
 ```
 
-## Codexとの使い方
+## ローカルAI agentとの使い方
 
 OpenStoreShot本体はクラウドAIサービスではありません。基本の流れは次の通りです。
 
 1. Studioでストア画像を見る。
 2. 人間が少し手で直す。
-3. 直したい内容をCodexに依頼する。
-4. Codexが `storeshot.project.json` とローカル素材を編集する。
-5. Codexが検証・レンダー・書き出しを実行する。
+3. 直したい内容をCodex、または使っているローカルAI agentに依頼する。
+4. agentが `storeshot.project.json` とローカル素材を編集する。
+5. agentが検証・レンダー・書き出しを実行する。
 6. Studioで結果を確認する。
 
 画像生成APIキーはブラウザに出しません。デモやテスト用の生成はローカルのplaceholderです。

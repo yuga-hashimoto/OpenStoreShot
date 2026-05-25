@@ -1,12 +1,13 @@
 # OpenStoreShot
 
-OpenStoreShot is a local-first OSS studio for designing, reviewing, validating, and exporting App Store and Google Play store images with Codex in the loop.
+OpenStoreShot is a local-first OSS studio for designing, reviewing, validating, and exporting App Store and Google Play store images with a local AI agent in the loop. Codex is the recommended default, but the project format and CLI are agent-neutral.
 
 <p>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href=".github/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/ci-pnpm%20quality-22c55e.svg" /></a>
   <img alt="Local first" src="https://img.shields.io/badge/local--first-yes-14b8a6.svg" />
-  <img alt="Codex workflow" src="https://img.shields.io/badge/Codex-ready-111827.svg" />
+  <img alt="Codex recommended" src="https://img.shields.io/badge/Codex-recommended-111827.svg" />
+  <img alt="Agent neutral" src="https://img.shields.io/badge/agent--neutral-yes-8b5cf6.svg" />
 </p>
 
 <p><b>English</b> · <a href="README.ja-JP.md">日本語</a> · <a href="docs/I18N.md">Localization guide</a></p>
@@ -18,7 +19,7 @@ OpenStoreShot is a local-first OSS studio for designing, reviewing, validating, 
 Store screenshots sit between brittle scripts and heavyweight design tools. OpenStoreShot gives indie developers, marketers, and small teams a reproducible workflow:
 
 - Inspect and edit store images in a polished browser studio.
-- Ask Codex to revise `storeshot.project.json`, render, validate, and summarize changes.
+- Ask Codex or another local coding agent to revise `storeshot.project.json`, render, validate, and summarize changes.
 - Upload real app screenshots and place them inside device mockups.
 - Browse App Store / Google Play references as high-level inspiration, without copying competitor creative.
 - Export deterministic PNG/JPEG assets for iOS and Android.
@@ -35,10 +36,18 @@ Store screenshots sit between brittle scripts and heavyweight design tools. Open
 - **Manual Studio**: slide list, layer panel, canvas preview, inspector, background editing, typography, right-click layer actions, undo/redo, screenshots upload, and export preview.
 - **Image to Objects**: turn uploaded or generated images into an editable image layer, extracted color swatches, and background shape objects for manual polish.
 - **Reference Gallery**: App Store / Google Play adapter interface, fixture mode, live App Store fetching, image proxying, store links, and inspiration-only briefs.
-- **Codex Workflow**: a local request queue plus `.agents/skills/storeshot-designer/SKILL.md` so Codex can edit, validate, render, and report.
+- **Agent Workflow**: a local request queue plus `.agents/skills/storeshot-designer/SKILL.md` so Codex can edit, validate, render, and report. Other local agents can follow the same project file and CLI commands.
 - **Renderer and Validator**: shared schema, deterministic SVG/Sharp rendering, iOS and Android target checks, Google Play feature graphic warnings.
 - **Internationalization**: first UI dictionary layer for 13 launch locales: Japanese, English, Simplified Chinese, Traditional Chinese, Korean, Spanish, French, German, Brazilian Portuguese, Italian, Russian, Indonesian, and Hindi.
 - **OSS Foundation**: CI, contribution guide, issue templates, PR checklist, docs, demo project, and copyright policy.
+
+## What You Can Export
+
+- App Store iPhone portrait screenshots, including iPhone 6.9-inch portrait.
+- App Store iPad portrait screenshots.
+- Google Play phone, 7-inch tablet, and 10-inch tablet screenshots.
+- Google Play feature graphics at `1024x500`.
+- PNG and JPEG output from the same deterministic project JSON.
 
 ## Quick Start
 
@@ -55,6 +64,8 @@ pnpm demo
 
 Open `http://127.0.0.1:3100`.
 
+Requirements: Node.js 20+, pnpm via Corepack, and a modern local browser. No OpenAI or image-generation API key is required.
+
 For the full first-run guide, see [docs/QUICKSTART.md](docs/QUICKSTART.md).
 For choosing Codex or another local agent, see [docs/AGENT_SETUP.md](docs/AGENT_SETUP.md).
 
@@ -70,18 +81,18 @@ pnpm storeshot ref appstore --country jp --feed top-free --limit 50
 pnpm storeshot ref play --country jp --category productivity --limit 50
 ```
 
-## Codex Workflow
+## Local Agent Workflow
 
 OpenStoreShot itself is not a cloud AI product. The intended loop is:
 
 1. Open the project in the studio.
 2. Review the visual output and make small manual edits.
-3. Add a Codex request from the UI, or ask Codex directly.
-4. Codex edits `storeshot.project.json` and local assets.
-5. Codex runs validation/render/export and reports the result.
+3. Add a request from the UI, or ask your local agent directly.
+4. The agent edits `storeshot.project.json` and local assets.
+5. The agent runs validation/render/export and reports the result.
 6. Reopen the studio to inspect the updated images.
 
-OpenStoreShot does not require an image generation API key. Placeholder generation is local and deterministic for demos, tests, and CI. Real asset generation should happen through the local Codex workflow or other local tools chosen by the user.
+OpenStoreShot does not require an image generation API key. Placeholder generation is local and deterministic for demos, tests, and CI. Real asset generation should happen through the local agent workflow or other local tools chosen by the user.
 
 `pnpm run doctor` detects supported local agent CLIs on `PATH` and marks Codex as recommended when available. Other local agents can still use the same project file and commands.
 
@@ -99,7 +110,7 @@ docs                      requirements, architecture, specs, policies
 .agents/skills            Codex workflow skill
 ```
 
-`storeshot.project.json` is the durable project format. The studio previews it, the CLI renders it, validators inspect it, and Codex edits it.
+`storeshot.project.json` is the durable project format. The studio previews it, the CLI renders it, validators inspect it, and local agents edit it.
 
 ## Reference Safety
 
