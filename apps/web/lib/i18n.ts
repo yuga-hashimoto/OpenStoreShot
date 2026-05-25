@@ -1,4 +1,18 @@
-export const locales = ["ja-JP", "en", "zh-CN", "zh-TW", "ko", "es", "fr", "de", "pt-BR"] as const;
+export const locales = [
+  "ja-JP",
+  "en",
+  "zh-CN",
+  "zh-TW",
+  "ko",
+  "es",
+  "fr",
+  "de",
+  "pt-BR",
+  "it",
+  "ru",
+  "id",
+  "hi"
+] as const;
 
 export type Locale = (typeof locales)[number];
 
@@ -11,7 +25,11 @@ export const localeLabels: Record<Locale, string> = {
   es: "Español",
   fr: "Français",
   de: "Deutsch",
-  "pt-BR": "Português"
+  "pt-BR": "Português",
+  it: "Italiano",
+  ru: "Русский",
+  id: "Bahasa Indonesia",
+  hi: "हिन्दी"
 };
 
 const ja = {
@@ -179,6 +197,58 @@ const partialMessages: Record<Exclude<Locale, "ja-JP">, Partial<Messages>> = {
     "references.title": "Galeria de referências",
     "json.title": "JSON do projeto",
     "language.label": "Idioma"
+  },
+  it: {
+    "nav.storeImages": "Immagini store",
+    "nav.assets": "Risorse",
+    "nav.references": "Riferimenti",
+    "nav.brand": "Brand",
+    "top.preview": "Anteprima",
+    "top.validate": "Valida",
+    "top.export": "Esporta",
+    "assets.upload": "Carica screenshot",
+    "references.title": "Galleria riferimenti",
+    "json.title": "JSON progetto",
+    "language.label": "Lingua"
+  },
+  ru: {
+    "nav.storeImages": "Изображения",
+    "nav.assets": "Материалы",
+    "nav.references": "Референсы",
+    "nav.brand": "Бренд",
+    "top.preview": "Предпросмотр",
+    "top.validate": "Проверить",
+    "top.export": "Экспорт",
+    "assets.upload": "Загрузить скриншот",
+    "references.title": "Галерея референсов",
+    "json.title": "JSON проекта",
+    "language.label": "Язык"
+  },
+  id: {
+    "nav.storeImages": "Gambar toko",
+    "nav.assets": "Aset",
+    "nav.references": "Referensi",
+    "nav.brand": "Brand",
+    "top.preview": "Pratinjau",
+    "top.validate": "Validasi",
+    "top.export": "Ekspor",
+    "assets.upload": "Unggah screenshot",
+    "references.title": "Galeri referensi",
+    "json.title": "JSON proyek",
+    "language.label": "Bahasa"
+  },
+  hi: {
+    "nav.storeImages": "स्टोर इमेज",
+    "nav.assets": "एसेट",
+    "nav.references": "रेफरेंस",
+    "nav.brand": "ब्रांड",
+    "top.preview": "प्रीव्यू",
+    "top.validate": "जांचें",
+    "top.export": "एक्सपोर्ट",
+    "assets.upload": "स्क्रीनशॉट अपलोड करें",
+    "references.title": "रेफरेंस गैलरी",
+    "json.title": "प्रोजेक्ट JSON",
+    "language.label": "भाषा"
   }
 };
 

@@ -6,7 +6,7 @@
 - Next.js App Router Studio UI with Japanese slide list, working left navigation, layer panel, canvas preview, inspector, Codex request panel, Reference Gallery, asset/upload panel, validation footer, undo/redo, zoom, duplicate/delete, and editable selected layer fields.
 - Canvas right-click layer menu for font, size, weight, alignment, text color, background colors, nudging, duplicate, and delete. Extreme text weight now visibly changes in the browser preview and renderer.
 - Image-to-object workflow in the asset panel: uploaded/generated images can become an editable image layer, extracted color swatches, and an editable background object.
-- Studio UI i18n foundation with language switcher and first dictionary coverage for Japanese, English, Simplified Chinese, Traditional Chinese, Korean, Spanish, French, German, and Brazilian Portuguese.
+- Studio UI i18n foundation with language switcher and first dictionary coverage for 13 launch locales: Japanese, English, Simplified Chinese, Traditional Chinese, Korean, Spanish, French, German, Brazilian Portuguese, Italian, Russian, Indonesian, and Hindi.
 - Deterministic `storeshot.project.json` schema using Zod.
 - Sample app project with 5 slides, iOS 6.9 portrait artboards, Android phone artboards, Google Play feature graphic, fictional assets, fixture references, and mock imagegen metadata.
 - Store target data and validation for iOS and Google Play dimensions, screenshot counts, feature graphic text density, unsupported store claims, and direct-copy guardrails.
@@ -23,7 +23,7 @@
 - Research and product docs under `docs/`.
 - OSS growth foundation: screenshot-backed README, Japanese README, `CONTRIBUTING.md`, `docs/I18N.md`, GitHub Actions CI, issue templates, and PR template.
 - Simplified onboarding: `pnpm run doctor`, `pnpm demo`, `pnpm quality`, `pnpm validate:demo`, `pnpm render:demo`, plus `docs/QUICKSTART.md`.
-- Open Design-inspired agent setup guide: `docs/AGENT_SETUP.md` plus `pnpm run doctor` detection for local agent CLIs without making Codex a product requirement.
+- Open Design-inspired agent setup guide: `docs/AGENT_SETUP.md` plus `pnpm run doctor` detection for local agent CLIs. Codex is marked as recommended when available, while the workflow remains usable with other local agents.
 - Store image playbook documenting the reusable lessons from the four primary reference OSS projects.
 
 ## Mock or fixture behavior
@@ -41,7 +41,7 @@
 - Production-grade Google Play scraper integration.
 - Full before/after imagegen comparison and variant application to selected layers.
 - Drag handles on canvas; numeric manual editing is implemented, direct drag/resize is still pending.
-- UI translation coverage is partial. The shell, major actions, and key panels are localized; many detailed helper strings still fall back to Japanese.
+- UI translation coverage is partial across 13 launch locales. The shell, major actions, and key panels are localized; many detailed helper strings still fall back to Japanese.
 
 ## Verified commands
 

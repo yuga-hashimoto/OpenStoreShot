@@ -37,7 +37,7 @@ Store screenshots sit between brittle scripts and heavyweight design tools. Open
 - **Reference Gallery**: App Store / Google Play adapter interface, fixture mode, live App Store fetching, image proxying, store links, and inspiration-only briefs.
 - **Codex Workflow**: a local request queue plus `.agents/skills/storeshot-designer/SKILL.md` so Codex can edit, validate, render, and report.
 - **Renderer and Validator**: shared schema, deterministic SVG/Sharp rendering, iOS and Android target checks, Google Play feature graphic warnings.
-- **Internationalization**: first UI dictionary layer for Japanese, English, Simplified Chinese, Traditional Chinese, Korean, Spanish, French, German, and Brazilian Portuguese.
+- **Internationalization**: first UI dictionary layer for 13 launch locales: Japanese, English, Simplified Chinese, Traditional Chinese, Korean, Spanish, French, German, Brazilian Portuguese, Italian, Russian, Indonesian, and Hindi.
 - **OSS Foundation**: CI, contribution guide, issue templates, PR checklist, docs, demo project, and copyright policy.
 
 ## Quick Start
@@ -83,7 +83,7 @@ OpenStoreShot itself is not a cloud AI product. The intended loop is:
 
 OpenStoreShot does not require an image generation API key. Placeholder generation is local and deterministic for demos, tests, and CI. Real asset generation should happen through the local Codex workflow or other local tools chosen by the user.
 
-`pnpm run doctor` detects supported local agent CLIs on `PATH` and recommends Codex when available.
+`pnpm run doctor` detects supported local agent CLIs on `PATH` and marks Codex as recommended when available. Other local agents can still use the same project file and commands.
 
 ## Architecture
 
@@ -117,7 +117,7 @@ Do not copy competitor screenshots, logos, UI, characters, proprietary visual tr
 
 The initial UI language switcher supports:
 
-`ja-JP`, `en`, `zh-CN`, `zh-TW`, `ko`, `es`, `fr`, `de`, `pt-BR`
+`ja-JP`, `en`, `zh-CN`, `zh-TW`, `ko`, `es`, `fr`, `de`, `pt-BR`, `it`, `ru`, `id`, `hi`
 
 See [docs/I18N.md](docs/I18N.md) to add or improve translations.
 

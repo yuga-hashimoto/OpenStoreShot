@@ -1,6 +1,6 @@
 # Agent Setup Guide
 
-OpenStoreShot is designed like Open Design in one important way: the app does not bundle an AI model or force one provider. It works with the coding agent that already runs on your machine.
+OpenStoreShot is designed like Open Design in one important way: the app does not bundle an AI model or force one provider. Codex is the recommended default when it is available, but the workflow also works with the coding agent that already runs on your machine.
 
 ## Recommended First Setup
 
@@ -19,7 +19,7 @@ Open:
 http://127.0.0.1:3100
 ```
 
-Then use your preferred local agent in this repository and ask it to edit:
+Then use Codex, or your preferred local agent, in this repository and ask it to edit:
 
 ```text
 examples/demo-project/storeshot.project.json
@@ -31,7 +31,7 @@ examples/demo-project/storeshot.project.json
 
 | Agent | Binary | Role |
 | --- | --- | --- |
-| Codex CLI | `codex` | Compatible local coding agent |
+| Codex CLI | `codex` | Recommended default local coding agent |
 | Claude Code | `claude` | Compatible local coding agent |
 | Gemini CLI | `gemini` | Compatible local coding agent |
 | OpenCode | `opencode` | Compatible local coding agent |
@@ -46,7 +46,7 @@ OpenStoreShot currently ships a Codex-style skill file because Codex is the envi
 .agents/skills/storeshot-designer/SKILL.md
 ```
 
-Other agents should use the same project file, CLI commands, and docs. The workflow is not Codex-only.
+Other agents should use the same project file, CLI commands, and docs. Codex is recommended because this repo ships a ready-made skill, but the workflow is not Codex-only.
 
 ## How the Loop Works
 
@@ -67,9 +67,10 @@ pnpm render:demo
 
 Use this default order:
 
-1. Any local coding agent already authenticated and available on `PATH`.
-2. The agent your team already trusts for repository edits.
-3. Manual editing plus CLI render/validate if no agent is installed.
+1. Codex CLI if it is installed and authenticated.
+2. Any other local coding agent already authenticated and available on `PATH`.
+3. The agent your team already trusts for repository edits.
+4. Manual editing plus CLI render/validate if no agent is installed.
 
 OpenStoreShot intentionally does not ask for API keys in the browser. If an agent or image tool needs credentials, configure that tool locally outside the Studio.
 

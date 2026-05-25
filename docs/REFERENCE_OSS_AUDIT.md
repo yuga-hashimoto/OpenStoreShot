@@ -25,4 +25,4 @@ All inspected projects are MIT-compatible. This repository remains MIT. Referenc
 - Asset generation is Codex-first; OpenStoreShot keeps only local placeholder generation for demos and tests.
 - OSS growth needs product screenshots, a translation guide, issue/PR templates, and CI from the start.
 - The public quickstart should be one obvious path: `corepack enable`, `pnpm install`, `pnpm run doctor`, `pnpm demo`.
-- Open Design's agent-selection setup pattern maps to OpenStoreShot as `pnpm run doctor`: detect local agent CLIs on `PATH` and document fallback/manual workflows instead of asking for browser API keys.
+- Open Design's agent-selection setup pattern maps to OpenStoreShot as `pnpm run doctor`: recommend Codex when available, detect other local agent CLIs on `PATH`, and document fallback/manual workflows instead of asking for browser API keys.

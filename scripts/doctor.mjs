@@ -4,7 +4,7 @@ import { execSync } from "node:child_process";
 
 const checks = [];
 const agentDefs = [
-  { id: "codex", label: "Codex CLI", command: "codex --version" },
+  { id: "codex", label: "Codex CLI", command: "codex --version", recommended: true },
   { id: "claude", label: "Claude Code", command: "claude --version" },
   { id: "gemini", label: "Gemini CLI", command: "gemini --version" },
   { id: "opencode", label: "OpenCode", command: "opencode --version" },
@@ -40,11 +40,13 @@ check("Codex skill exists", existsSync(".agents/skills/storeshot-designer/SKILL.
 const detectedAgents = agentDefs
   .map((agent) => ({ ...agent, version: command(agent.command) }))
   .filter((agent) => Boolean(agent.version));
-const selectedAgent = detectedAgents[0];
+const selectedAgent = detectedAgents.find((agent) => agent.recommended) ?? detectedAgents[0];
 check(
   "local AI agent CLI",
   Boolean(selectedAgent),
-  selectedAgent ? `${selectedAgent.label} detected` : "optional; install any supported local agent CLI"
+  selectedAgent
+    ? `${selectedAgent.label} detected${selectedAgent.recommended ? " (recommended)" : ""}`
+    : "optional; install any supported local agent CLI"
 );
 
 const failed = checks.filter((item) => !item.ok);
@@ -58,8 +60,8 @@ console.log("");
 console.log("Agent setup:");
 if (detectedAgents.length > 0) {
   for (const agent of detectedAgents) {
-    const badge = agent.id === selectedAgent?.id ? "detected" : "available";
-    console.log(`  ${badge.padEnd(9)} ${agent.label} (${agent.id})`);
+    const badge = agent.id === selectedAgent?.id ? (agent.recommended ? "recommended" : "detected") : "available";
+    console.log(`  ${badge.padEnd(11)} ${agent.label} (${agent.id})`);
   }
 } else {
   console.log("  No supported agent CLI found on PATH.");
