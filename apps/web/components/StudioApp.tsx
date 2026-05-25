@@ -108,6 +108,7 @@ export function StudioApp() {
   const [activePanel, setActivePanel] = useState<ActivePanel>("ストア画像");
   const [referenceApps, setReferenceApps] = useState(fixtureReferences);
   const [referenceStatus, setReferenceStatus] = useState<"fixture" | "loading" | "live" | "error">("fixture");
+  const [inspirationNotice, setInspirationNotice] = useState<string | null>(null);
   const [reviewInstruction, setReviewInstruction] = useState("見出しをもう少し短くして、端末モックアップとの余白を広げたい。");
   const [requestStatus, setRequestStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [exportStatus, setExportStatus] = useState<"idle" | "rendering" | "done" | "error">("idle");
@@ -266,6 +267,7 @@ export function StudioApp() {
               <CodexRequestPanel
                 t={t}
                 requestStatus={requestStatus}
+                inspirationNotice={inspirationNotice}
                 reviewInstruction={reviewInstruction}
                 selectedLayerName={selectedLayerName}
                 setReviewInstruction={setReviewInstruction}
@@ -293,6 +295,7 @@ export function StudioApp() {
               t={t}
               useInspiration={(app) => {
                 setReviewInstruction(`${app.appName}の参考から、コピーせずに「短い見出し・端末中心・明るい背景」の構成だけ取り入れたい。`);
+                setInspirationNotice(`${app.appName}の構成ヒントを修正指示に追加しました。参考画像はコピーせず、文字量・端末配置・色の雰囲気だけを使います。`);
                 setActivePanel("ストア画像");
               }}
             />
@@ -839,6 +842,7 @@ function ManualAdjustPanel({
 function CodexRequestPanel({
   t,
   requestStatus,
+  inspirationNotice,
   reviewInstruction,
   selectedLayerName,
   setReviewInstruction,
@@ -846,6 +850,7 @@ function CodexRequestPanel({
 }: {
   t: StudioMessages;
   requestStatus: "idle" | "saving" | "saved" | "error";
+  inspirationNotice: string | null;
   reviewInstruction: string;
   selectedLayerName: string;
   setReviewInstruction: (value: string) => void;
@@ -855,6 +860,11 @@ function CodexRequestPanel({
     <section className="mt-6 rounded-lg border border-teal-300/20 bg-teal-300/[0.06] p-3">
       <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-teal-100"><Sparkles className="h-4 w-4" />{t["codex.title"]}</div>
       <p className="mb-3 text-xs leading-5 text-slate-400">{t["codex.description"]}</p>
+      {inspirationNotice ? (
+        <div className="mb-3 rounded-md border border-amber-300/30 bg-amber-300/10 p-2 text-xs leading-5 text-amber-100">
+          {inspirationNotice}
+        </div>
+      ) : null}
       <textarea
         value={reviewInstruction}
         onChange={(event) => setReviewInstruction(event.target.value)}

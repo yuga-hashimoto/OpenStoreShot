@@ -5,7 +5,7 @@ export default defineConfig({
   webServer: {
     command: "pnpm --filter @openstoreshot/web exec next dev -p 3100",
     url: "http://127.0.0.1:3100",
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 120000
   },
   use: {
