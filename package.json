@@ -1,0 +1,29 @@
+{
+  "name": "openstoreshot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Codex-native OSS studio for Android and iOS store screenshots.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "pnpm --filter @openstoreshot/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "e2e": "playwright test",
+    "storeshot": "pnpm --filter @openstoreshot/cli storeshot"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.1",
+    "@types/node": "^20.12.12",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

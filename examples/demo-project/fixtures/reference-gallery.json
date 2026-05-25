@@ -1,0 +1,30 @@
+[
+  {
+    "id": "fixture-ios-focus",
+    "platform": "ios",
+    "appName": "Focus Garden",
+    "developer": "Fictional Labs",
+    "category": "Productivity",
+    "rating": 4.8,
+    "patterns": {
+      "composition": "centered device mockup with large headline",
+      "copyLength": "short headline, no long paragraph",
+      "colorMood": "bright pastel gradient",
+      "slideRole": "benefit-first"
+    }
+  },
+  {
+    "id": "fixture-play-budget",
+    "platform": "android",
+    "appName": "Budget Trail",
+    "developer": "Example Studio",
+    "category": "Finance",
+    "rating": 4.6,
+    "patterns": {
+      "composition": "large benefit headline with angled phone",
+      "copyLength": "one clear claim per slide",
+      "colorMood": "trustworthy neutral with focused accent",
+      "slideRole": "feature proof"
+    }
+  }
+]

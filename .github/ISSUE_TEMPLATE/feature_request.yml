@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose an editor, renderer, reference, i18n, or Codex workflow improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow is currently hard?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the UX and expected output.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Area
+      options:
+        - label: Editor UX
+        - label: Renderer/export
+        - label: Reference Gallery
+        - label: Validation
+        - label: Localization
+        - label: Codex workflow
