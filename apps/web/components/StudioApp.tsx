@@ -22,7 +22,7 @@ import { fixtureReferences } from "@openstoreshot/store-fetch";
 import type { StoreReferenceApp } from "@openstoreshot/store-fetch";
 import { useStudioStore } from "../lib/store";
 import { isLocale, localeLabels, locales, messagesFor, type Locale } from "../lib/i18n";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import type { LucideIcon } from "lucide-react";
 
 type ActivePanel = "ストア画像" | "素材" | "参考" | "ブランド" | "JSON";
@@ -135,6 +135,10 @@ export function StudioApp() {
   const [activePanel, setActivePanel] = useState<ActivePanel>("ストア画像");
   const [referenceApps, setReferenceApps] = useState(fixtureReferences);
   const [referenceStatus, setReferenceStatus] = useState<"fixture" | "loading" | "live" | "error">("fixture");
+  const [referencePlatform, setReferencePlatform] = useState<"ios" | "android">("ios");
+  const [referenceKeyword, setReferenceKeyword] = useState("");
+  const [referenceLimit, setReferenceLimit] = useState(12);
+  const [referenceMode, setReferenceMode] = useState<"ranking" | "search">("ranking");
   const [inspirationNotice, setInspirationNotice] = useState<string | null>(null);
   const [reviewInstruction, setReviewInstruction] = useState("見出しをもう少し短くして、端末モックアップとの余白を広げたい。");
   const [requestStatus, setRequestStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -183,11 +187,28 @@ export function StudioApp() {
     }
   }
 
-  async function fetchAppStoreReferences() {
-    if (referenceStatus === "loading") return;
+  async function fetchReferences(options?: { mode?: "ranking" | "search"; keyword?: string; limit?: number; platform?: "ios" | "android" }) {
+    const nextMode = options?.mode ?? referenceMode;
+    const nextKeyword = options?.keyword ?? referenceKeyword;
+    const nextLimit = options?.limit ?? referenceLimit;
+    const nextPlatform = options?.platform ?? referencePlatform;
     setReferenceStatus("loading");
+    setReferenceMode(nextMode);
+    setReferenceLimit(nextLimit);
+    setReferencePlatform(nextPlatform);
     try {
-      const response = await fetch("/api/reference?platform=ios&country=jp&feed=top-free&limit=12&fixture=false");
+      const params = new URLSearchParams({
+        platform: nextPlatform,
+        country: "jp",
+        limit: String(nextLimit),
+        fixture: "false"
+      });
+      if (nextMode === "search" && nextKeyword.trim()) {
+        params.set("keyword", nextKeyword.trim());
+      } else {
+        params.set("feed", "top-free");
+      }
+      const response = await fetch(`/api/reference?${params.toString()}`);
       if (!response.ok) throw new Error("reference fetch failed");
       const json = (await response.json()) as { data: typeof fixtureReferences };
       setReferenceApps(json.data.length > 0 ? json.data : fixtureReferences);
@@ -200,7 +221,7 @@ export function StudioApp() {
 
   useEffect(() => {
     if (activePanel === "参考" && referenceStatus === "fixture") {
-      void fetchAppStoreReferences();
+      void fetchReferences({ mode: "ranking" });
     }
   }, [activePanel, referenceStatus]);
 
@@ -319,6 +340,14 @@ export function StudioApp() {
             <ReferencePanel
               referenceApps={referenceApps}
               referenceStatus={referenceStatus}
+              referencePlatform={referencePlatform}
+              referenceKeyword={referenceKeyword}
+              referenceLimit={referenceLimit}
+              referenceMode={referenceMode}
+              setReferenceKeyword={setReferenceKeyword}
+              setReferenceLimit={setReferenceLimit}
+              setReferencePlatform={setReferencePlatform}
+              fetchReferences={fetchReferences}
               t={t}
               useInspiration={(app) => {
                 const hint = referenceHintLines(app).join("\n");
@@ -1078,14 +1107,37 @@ function AssetsPanel({
 function ReferencePanel({
   referenceApps,
   referenceStatus,
+  referencePlatform,
+  referenceKeyword,
+  referenceLimit,
+  referenceMode,
+  setReferenceKeyword,
+  setReferenceLimit,
+  setReferencePlatform,
+  fetchReferences,
   t,
   useInspiration
 }: {
   referenceApps: StoreReferenceApp[];
   referenceStatus: "fixture" | "loading" | "live" | "error";
+  referencePlatform: "ios" | "android";
+  referenceKeyword: string;
+  referenceLimit: number;
+  referenceMode: "ranking" | "search";
+  setReferenceKeyword: (value: string) => void;
+  setReferenceLimit: (value: number) => void;
+  setReferencePlatform: (value: "ios" | "android") => void;
+  fetchReferences: (options?: { mode?: "ranking" | "search"; keyword?: string; limit?: number; platform?: "ios" | "android" }) => void;
   t: StudioMessages;
   useInspiration: (app: StoreReferenceApp) => void;
 }) {
+  const keywordInputRef = useRef<HTMLInputElement>(null);
+  function runReferenceSearch() {
+    const keyword = keywordInputRef.current?.value ?? referenceKeyword;
+    setReferenceKeyword(keyword);
+    void fetchReferences({ mode: keyword.trim() ? "search" : "ranking", keyword, platform: referencePlatform, limit: referenceLimit });
+  }
+
   return (
     <section data-testid="reference-gallery">
       <div className="mb-2 flex items-center justify-between">
@@ -1093,8 +1145,76 @@ function ReferencePanel({
         <span className="rounded bg-white/8 px-2 py-1 text-xs text-slate-400">{referenceStatus === "live" ? "App Store" : referenceStatus === "loading" ? "取得中" : "デモ"}</span>
       </div>
       <p className="mb-3 text-xs leading-5 text-slate-400">人気アプリのストア画像は、コピーではなく構成・文字量・端末配置・色の雰囲気を分析するために使います。</p>
+      <form
+        className="mb-3 rounded-lg border border-white/10 bg-black/20 p-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          runReferenceSearch();
+        }}
+      >
+        <div className="grid gap-2">
+          <label className="text-xs text-slate-400">
+            アプリ名・キーワード
+            <input
+              name="keyword"
+              ref={keywordInputRef}
+              defaultValue={referenceKeyword}
+              onInput={(event) => setReferenceKeyword(event.currentTarget.value)}
+              placeholder="例: ChatGPT, Notion, 家計簿"
+              className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-teal-300/70"
+            />
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs text-slate-400">
+              ストア
+              <select
+                name="platform"
+                value={referencePlatform}
+                onChange={(event) => setReferencePlatform(event.target.value as "ios" | "android")}
+                className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-2 py-2 text-sm text-white"
+              >
+                <option value="ios">App Store</option>
+                <option value="android">Google Play</option>
+              </select>
+            </label>
+            <label className="text-xs text-slate-400">
+              件数
+              <select
+                name="limit"
+                value={referenceLimit}
+                onChange={(event) => setReferenceLimit(Number(event.target.value))}
+                className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-2 py-2 text-sm text-white"
+              >
+                <option value={12}>12件</option>
+                <option value={25}>25件</option>
+                <option value={50}>50件</option>
+              </select>
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="submit" className="rounded-md bg-teal-300 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-teal-200">
+              検索する
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setReferenceKeyword("");
+                if (keywordInputRef.current) keywordInputRef.current.value = "";
+                void fetchReferences({ mode: "ranking", keyword: "" });
+              }}
+              className="rounded-md border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/8"
+            >
+              ランキングに戻す
+            </button>
+          </div>
+        </div>
+        <div className="mt-2 text-[11px] text-slate-500">
+          現在: {referencePlatform === "ios" ? "App Store" : "Google Play"} / {referenceMode === "search" ? `検索「${referenceKeyword || "未入力"}」` : "トップ無料ランキング"} / {referenceLimit}件
+        </div>
+      </form>
       {referenceStatus === "loading" ? <div className="mb-3 rounded-md border border-white/10 bg-white/[0.04] p-2 text-xs text-slate-300">App Storeランキングから参考画像を取得しています...</div> : null}
       {referenceStatus === "error" ? <div className="mb-3 rounded-md border border-amber-300/30 bg-amber-300/10 p-2 text-xs text-amber-100">ライブ取得に失敗したため、デモ参考を表示しています。</div> : null}
+      {referencePlatform === "android" ? <div className="mb-3 rounded-md border border-amber-300/30 bg-amber-300/10 p-2 text-xs text-amber-100">Google Playは現在replaceable adapterのfixture fallbackです。ライブ取得実装を差し替え可能な構造にしています。</div> : null}
       <div className="space-y-3">
         {referenceApps.map((app) => {
           const hints = referenceHintLines(app);

@@ -14,6 +14,7 @@ test("web app loads demo project and editor workflow", async ({ page }) => {
 });
 
 test("reference inspiration flow uses real per-app hints", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.goto("/");
   await page.getByTestId("nav-references").click();
 
@@ -23,6 +24,15 @@ test("reference inspiration flow uses real per-app hints", async ({ page }) => {
   await expect(gallery.getByText("1枚目は短い価値訴求、端末は中央、背景は明るめ、長文は避ける")).toHaveCount(0);
   await expect(gallery.getByText("構成:", { exact: false }).first()).toBeVisible();
   await expect(gallery.getByText("情報設計:", { exact: false }).first()).toBeVisible();
+
+  await page.getByPlaceholder("例: ChatGPT, Notion, 家計簿").fill("ChatGPT");
+  await page.getByLabel("件数").selectOption("25");
+  await page.getByRole("button", { name: "検索する" }).click();
+  await expect(gallery.getByText("ChatGPT").first()).toBeVisible({ timeout: 60_000 });
+  await expect(gallery.getByText(/現在: App Store \/ 検索「ChatGPT」 \/ 25件/)).toBeVisible();
+
+  await page.getByRole("button", { name: "ランキングに戻す" }).click();
+  await expect(gallery.getByText("トップ無料ランキング")).toBeVisible({ timeout: 20_000 });
 
   await gallery.getByText("構成だけ参考").first().click();
   await expect(page.getByText("構成ヒントを修正指示に追加しました")).toBeVisible();
