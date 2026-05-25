@@ -5,6 +5,7 @@
 - TypeScript pnpm monorepo with `apps/web`, `packages/core`, `packages/renderer`, `packages/store-fetch`, `packages/imagegen`, `packages/cli`, `packages/ui`, docs, demo, and Codex skill.
 - Next.js App Router Studio UI with Japanese slide list, working left navigation, layer panel, canvas preview, inspector, Codex request panel, Reference Gallery, asset/upload panel, validation footer, undo/redo, zoom, duplicate/delete, and editable selected layer fields.
 - Canvas right-click layer menu for font, size, weight, alignment, text color, background colors, nudging, duplicate, and delete. Extreme text weight now visibly changes in the browser preview and renderer.
+- Image-to-object workflow in the asset panel: uploaded/generated images can become an editable image layer, extracted color swatches, and an editable background object.
 - Studio UI i18n foundation with language switcher and first dictionary coverage for Japanese, English, Simplified Chinese, Traditional Chinese, Korean, Spanish, French, German, and Brazilian Portuguese.
 - Deterministic `storeshot.project.json` schema using Zod.
 - Sample app project with 5 slides, iOS 6.9 portrait artboards, Android phone artboards, Google Play feature graphic, fictional assets, fixture references, and mock imagegen metadata.
@@ -71,6 +72,7 @@ node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("examples/de
 - Browser verification opened `http://127.0.0.1:3100`, selected a layer, and confirmed the editor rendered.
 - Browser verification confirmed the language switcher changes top-level UI labels to English.
 - Browser verification confirmed `標準` vs `極太` changes computed font weight and applies extra shadow for visibly heavier Japanese text.
+- Browser verification confirmed `画像をオブジェクト化` creates visible editable object layers from an asset.
 - App Store top-free reference API returned live ranking apps; some App Store pages expose screenshots through the web page rather than iTunes Lookup, so the adapter now extracts screenshot URLs from Apple-hosted `mzstatic.com` sources as a replaceable best-effort path.
 - Upload and export API smoke checks passed against the running local Next.js app.
 - A concept image was generated with the built-in imagegen tool and compared against the implemented editor screenshot. The implementation keeps the same multi-panel editor structure, dark creative-tool chrome, central phone artboard, right inspector, AI Assist, validation footer, and export flow, but is intentionally a lighter MVP than the concept.

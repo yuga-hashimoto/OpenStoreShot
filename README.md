@@ -33,6 +33,7 @@ Store screenshots sit between brittle scripts and heavyweight design tools. Open
 ## Core Features
 
 - **Manual Studio**: slide list, layer panel, canvas preview, inspector, background editing, typography, right-click layer actions, undo/redo, screenshots upload, and export preview.
+- **Image to Objects**: turn uploaded or generated images into an editable image layer, extracted color swatches, and background shape objects for manual polish.
 - **Reference Gallery**: App Store / Google Play adapter interface, fixture mode, live App Store fetching, image proxying, store links, and inspiration-only briefs.
 - **Codex Workflow**: a local request queue plus `.agents/skills/storeshot-designer/SKILL.md` so Codex can edit, validate, render, and report.
 - **Renderer and Validator**: shared schema, deterministic SVG/Sharp rendering, iOS and Android target checks, Google Play feature graphic warnings.

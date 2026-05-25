@@ -35,6 +35,10 @@ function layerToHtml(layer: Layer, project: StoreShotProject): string {
   if (layer.type === "shape") {
     return `<div data-layer="${escapeHtml(layer.id)}" style="${common};background:${fillToCss(layer)};border-radius:${layer.radius}px;box-shadow:0 28px 80px rgba(15,23,42,.16)"></div>`;
   }
+  if (layer.type === "image" && layer.assetId) {
+    const asset = [...project.assets, ...project.generatedImageAssets].find((item) => item.id === layer.assetId);
+    return `<div data-layer="${escapeHtml(layer.id)}" style="${common};border-radius:${layer.radius}px;overflow:hidden;box-shadow:0 28px 80px rgba(15,23,42,.16)">${asset ? `<img src="${escapeHtml(asset.path)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block" />` : ""}</div>`;
+  }
   if (layer.type === "device") {
     return `<div data-layer="${escapeHtml(layer.id)}" style="${common};border-radius:${layer.radius || 58}px;background:#0f172a;padding:18px;box-shadow:0 36px 90px rgba(15,23,42,.32)"><div style="width:100%;height:100%;border-radius:${Math.max((layer.radius || 58) - 18, 22)}px;background:linear-gradient(160deg,#eef2ff,#ffffff 45%,#d1fae5);display:flex;align-items:center;justify-content:center;color:#475569;font:700 34px Inter,Arial">${escapeHtml(project.app.name)}</div></div>`;
   }

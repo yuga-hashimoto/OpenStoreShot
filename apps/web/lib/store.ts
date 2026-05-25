@@ -22,6 +22,7 @@ type StudioState = {
   selectLayer: (layerId: string) => void;
   updateLayer: (layerId: string, patch: Partial<Layer>) => void;
   addAsset: (asset: StoreShotProject["assets"][number]) => void;
+  createObjectLayersFromAsset: (asset: StoreShotProject["assets"][number], colors: string[]) => void;
   duplicateLayer: (layerId: string) => void;
   deleteLayer: (layerId: string) => void;
   undo: () => void;
@@ -189,6 +190,54 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     const project = structuredClone(state.project);
     project.assets = [asset, ...project.assets.filter((item) => item.id !== asset.id)];
     set(commit(state, project));
+  },
+  createObjectLayersFromAsset: (asset, colors) => {
+    const state = get();
+    const project = structuredClone(state.project);
+    const { artboard } = activeArtboard(project, state.selectedSlideId, state.selectedArtboardId);
+    const timestamp = Date.now();
+    const objectWidth = Math.round(artboard.width * 0.48);
+    const objectHeight = Math.round(objectWidth * ((asset.height ?? 1) / Math.max(asset.width ?? 1, 1)));
+    const imageLayer = fillLayerDefaults({
+      id: `object-image-${timestamp}`,
+      type: "image",
+      name: `${asset.id} オブジェクト画像`,
+      assetId: asset.id,
+      x: Math.round((artboard.width - objectWidth) / 2),
+      y: Math.round(artboard.height * 0.34),
+      width: objectWidth,
+      height: Math.min(objectHeight, Math.round(artboard.height * 0.46)),
+      radius: Math.round(artboard.width * 0.035),
+      opacity: 1
+    });
+    const swatchLayers = colors.slice(0, 5).map((color, index) => fillLayerDefaults({
+      id: `object-color-${timestamp}-${index + 1}`,
+      type: "shape",
+      name: `抽出色 ${index + 1}`,
+      x: Math.round(artboard.width * 0.14 + index * artboard.width * 0.075),
+      y: Math.round(artboard.height * 0.83),
+      width: Math.round(artboard.width * 0.052),
+      height: Math.round(artboard.width * 0.052),
+      radius: Math.round(artboard.width * 0.026),
+      opacity: 0.92,
+      fill: { type: "solid", color }
+    }));
+    const haloLayer = fillLayerDefaults({
+      id: `object-halo-${timestamp}`,
+      type: "shape",
+      name: "画像から作成した背景オブジェクト",
+      x: Math.round(artboard.width * 0.12),
+      y: Math.round(artboard.height * 0.27),
+      width: Math.round(artboard.width * 0.76),
+      height: Math.round(artboard.height * 0.46),
+      radius: Math.round(artboard.width * 0.09),
+      opacity: 0.38,
+      fill: { type: "gradient", from: colors[0] ?? "#DBEAFE", to: colors[1] ?? "#F0FDFA", angle: 135 }
+    });
+    const firstContentIndex = Math.max(1, artboard.layers.findIndex((layer) => layer.type !== "background"));
+    artboard.layers.splice(firstContentIndex, 0, haloLayer);
+    artboard.layers.push(imageLayer, ...swatchLayers);
+    set({ ...commit(state, project), selectedLayerIds: [imageLayer.id] });
   },
   duplicateLayer: (layerId) => {
     const state = get();

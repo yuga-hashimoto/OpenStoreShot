@@ -281,6 +281,7 @@ export function StudioApp() {
               selectedLayer={selectedLayer}
               updateLayer={state.updateLayer}
               addAsset={state.addAsset}
+              createObjectLayersFromAsset={state.createObjectLayersFromAsset}
               exportFiles={exportFiles}
               setExportFiles={setExportFiles}
             />
@@ -376,6 +377,14 @@ export function StudioApp() {
                       <div className="grid h-full w-full place-items-center overflow-hidden rounded-[inherit] bg-gradient-to-br from-indigo-50 via-white to-emerald-100 text-slate-500">
                         {screenshot ? <img src={assetUrl(screenshot.path)} alt="" className="h-full w-full object-cover" /> : <span className="text-[10px] font-bold">{project.app.name}</span>}
                       </div>
+                    </button>
+                  );
+                }
+                if (layer.type === "image" && layer.assetId) {
+                  const asset = [...project.assets, ...project.generatedImageAssets].find((item) => item.id === layer.assetId);
+                  return (
+                    <button key={layer.id} onClick={() => state.selectLayer(layer.id)} onContextMenu={(event) => openLayerMenu(event, layer.id)} className={`absolute overflow-hidden shadow-xl ${selectedLayerIds.includes(layer.id) ? "outline outline-2 outline-teal-400" : ""}`} style={style}>
+                      {asset ? <img src={assetUrl(asset.path)} alt="" className="h-full w-full object-cover" /> : null}
                     </button>
                   );
                 }
@@ -871,12 +880,52 @@ function CodexRequestPanel({
   );
 }
 
+async function extractImagePalette(src: string): Promise<string[]> {
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+  const loaded = new Promise<HTMLImageElement>((resolve, reject) => {
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("image load failed"));
+  });
+  image.src = src;
+  const loadedImage = await loaded;
+  const canvas = document.createElement("canvas");
+  const size = 48;
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) throw new Error("canvas unavailable");
+  context.drawImage(loadedImage, 0, 0, size, size);
+  const pixels = context.getImageData(0, 0, size, size).data;
+  const buckets = new Map<string, number>();
+  for (let index = 0; index < pixels.length; index += 4) {
+    const alpha = pixels[index + 3] ?? 0;
+    if (alpha < 180) continue;
+    const red = pixels[index] ?? 0;
+    const green = pixels[index + 1] ?? 0;
+    const blue = pixels[index + 2] ?? 0;
+    const saturation = Math.max(red, green, blue) - Math.min(red, green, blue);
+    if (red + green + blue > 735 || red + green + blue < 36 || saturation < 12) continue;
+    const key = [red, green, blue].map((value) => Math.round(value / 32) * 32).join(",");
+    buckets.set(key, (buckets.get(key) ?? 0) + 1);
+  }
+  const colors = [...buckets.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([key]) => {
+      const [red = 0, green = 0, blue = 0] = key.split(",").map(Number);
+      return `#${[red, green, blue].map((value) => Math.max(0, Math.min(255, value)).toString(16).padStart(2, "0")).join("")}`;
+    });
+  return colors.length > 0 ? colors : ["#DBEAFE", "#CCFBF1", "#FDE68A"];
+}
+
 function AssetsPanel({
   project,
   t,
   selectedLayer,
   updateLayer,
   addAsset,
+  createObjectLayersFromAsset,
   exportFiles,
   setExportFiles
 }: {
@@ -885,10 +934,12 @@ function AssetsPanel({
   selectedLayer: Layer | undefined;
   updateLayer: (layerId: string, patch: Partial<Layer>) => void;
   addAsset: (asset: StoreShotProject["assets"][number]) => void;
+  createObjectLayersFromAsset: (asset: StoreShotProject["assets"][number], colors: string[]) => void;
   exportFiles: ExportFile[];
   setExportFiles: (files: ExportFile[]) => void;
 }) {
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
+  const [objectifyStatus, setObjectifyStatus] = useState<string | null>(null);
   const assets = [...project.assets, ...project.generatedImageAssets];
 
   useEffect(() => {
@@ -916,6 +967,18 @@ function AssetsPanel({
     }
   }
 
+  async function objectifyAsset(asset: StoreShotProject["assets"][number]) {
+    setObjectifyStatus(`${asset.id} を解析中...`);
+    try {
+      const colors = await extractImagePalette(assetUrl(asset.path));
+      createObjectLayersFromAsset(asset, colors);
+      setObjectifyStatus(`${asset.id} から編集可能なオブジェクトを作成しました。`);
+    } catch {
+      createObjectLayersFromAsset(asset, ["#DBEAFE", "#CCFBF1", "#FDE68A"]);
+      setObjectifyStatus(`${asset.id} を画像レイヤーとして配置しました。色抽出はできませんでした。`);
+    }
+  }
+
   return (
     <section>
       <div className="mb-3 text-sm font-semibold text-slate-200">{t["assets.title"]}</div>
@@ -937,6 +1000,10 @@ function AssetsPanel({
       </label>
       {uploadStatus === "done" ? <div className="mb-3 rounded-md border border-teal-300/30 bg-teal-300/10 p-2 text-xs text-teal-100">アップロードしました。端末を選んでいた場合は自動配置済みです。</div> : null}
       {uploadStatus === "error" ? <div className="mb-3 rounded-md border border-red-300/30 bg-red-300/10 p-2 text-xs text-red-100">アップロードに失敗しました。</div> : null}
+      <div className="mb-3 rounded-md border border-white/10 bg-white/[0.03] p-3 text-xs leading-5 text-slate-400">
+        画像をオブジェクト化すると、画像レイヤー、抽出色のスウォッチ、背景用の図形レイヤーを作ります。AI生成背景やアップロード画像を手で微修正しやすくするための入口です。
+      </div>
+      {objectifyStatus ? <div className="mb-3 rounded-md border border-teal-300/30 bg-teal-300/10 p-2 text-xs text-teal-100">{objectifyStatus}</div> : null}
       <div className="space-y-2">
         {assets.map((asset) => (
           <div key={`${asset.id}-${asset.path}`} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
@@ -951,6 +1018,7 @@ function AssetsPanel({
             {selectedLayer?.type === "device" && asset.type === "screenshot" ? (
               <button onClick={() => updateLayer(selectedLayer.id, { screenshotAssetId: asset.id })} className="mt-3 w-full rounded-md border border-white/10 px-3 py-2 text-xs text-slate-200 hover:bg-white/8">選択中の端末に配置</button>
             ) : null}
+            <button onClick={() => void objectifyAsset(asset)} className="mt-2 w-full rounded-md border border-teal-300/30 bg-teal-300/[0.06] px-3 py-2 text-xs font-semibold text-teal-100 hover:bg-teal-300/[0.1]">画像をオブジェクト化</button>
           </div>
         ))}
       </div>

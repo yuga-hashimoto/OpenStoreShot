@@ -10,6 +10,7 @@ OpenStoreShotは、Codexと一緒にApp Store / Google Play向けストア画像
 
 - ブラウザ上でストア画像を確認し、文字・背景・端末モック・素材を微修正できます。
 - 実際に撮ったスクショをアップロードし、端末フレーム内へ配置できます。
+- AI生成画像やアップロード画像を、画像レイヤー・抽出色・背景図形オブジェクトに変換できます。
 - App Store / Google Playの参考情報を見て、構成や文字量だけを参考にできます。
 - Codexに自然言語で修正を依頼し、`storeshot.project.json` を編集、検証、書き出しできます。
 - iOS / Android向けのPNG/JPEGを書き出せます。

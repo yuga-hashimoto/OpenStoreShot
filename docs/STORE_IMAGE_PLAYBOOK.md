@@ -19,6 +19,7 @@ Make manual editing obvious and fast.
 - Preset layouts for common App Store and Google Play stories.
 - Upload real screenshots and place them into device frames.
 - Multi-language store copy should be visible and exportable.
+- Generated or uploaded images should be readable as editable objects: the original image layer, extracted color swatches, and editable background shapes at minimum.
 
 ## From `fastlane`
 
@@ -49,5 +50,6 @@ A great store image workflow should support:
 - feature graphic creation
 - reference browsing without copying
 - manual pixel-level polish
+- image-to-object conversion for generated assets
 - Codex-driven structured edits
 - deterministic validation and export
