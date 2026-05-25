@@ -93,6 +93,33 @@ function referenceImageUrl(url: string) {
   return `/api/reference/image?url=${encodeURIComponent(url)}`;
 }
 
+function referenceHintLines(app: StoreReferenceApp) {
+  const category = app.category.toLowerCase();
+  const screenshotCount = app.screenshotUrls.length;
+  const lines: string[] = [];
+
+  if (category.includes("productivity") || category.includes("utilities")) {
+    lines.push("構成: 価値訴求のあとに、主要操作と具体的な利用場面を順に見せる。");
+    lines.push("情報設計: UIのスクショを大きく置き、見出しは機能名より成果ベースにする。");
+  } else if (category.includes("social")) {
+    lines.push("構成: 使う人・会話・共有体験が伝わる順番で、最初に世界観を出す。");
+    lines.push("情報設計: 画面説明よりも参加したくなる短いコピーを優先する。");
+  } else if (category.includes("food")) {
+    lines.push("構成: すぐ使える便益、注文や発見の手軽さ、安心感の順に見せる。");
+    lines.push("情報設計: 写真や色の食欲感を参考にしつつ、ロゴや固有UIはコピーしない。");
+  } else if (category.includes("shopping")) {
+    lines.push("構成: お得感、探しやすさ、購入前の安心材料を分けて見せる。");
+    lines.push("情報設計: バッジ表現は根拠がある場合だけ使い、価格訴求に寄せすぎない。");
+  } else {
+    lines.push("構成: 1枚目でベネフィット、次に主要機能、最後に信頼や行動喚起を置く。");
+    lines.push("情報設計: コピーは短く、端末内の情報と見出しが重複しすぎないようにする。");
+  }
+
+  lines.push(screenshotCount >= 5 ? `枚数設計: ${screenshotCount}枚あるため、連続ストーリーとして役割を分ける。` : "枚数設計: 少ない枚数でも、1枚ごとの役割を明確にする。");
+  lines.push((app.rating ?? 0) >= 4.5 ? "トーン: 高評価アプリらしく、信頼感と完成度を前面に出す。" : "トーン: 過度な実績訴求より、使い方の分かりやすさを優先する。");
+  return lines;
+}
+
 function layerDisplayName(id: string, name?: string) {
   const labels: Record<string, string> = {
     headline: "見出し",
@@ -294,7 +321,8 @@ export function StudioApp() {
               referenceStatus={referenceStatus}
               t={t}
               useInspiration={(app) => {
-                setReviewInstruction(`${app.appName}の参考から、コピーせずに「短い見出し・端末中心・明るい背景」の構成だけ取り入れたい。`);
+                const hint = referenceHintLines(app).join("\n");
+                setReviewInstruction(`${app.appName}の参考から、コピーせずに以下の構成ヒントだけを取り入れたい。\n${hint}`);
                 setInspirationNotice(`${app.appName}の構成ヒントを修正指示に追加しました。参考画像はコピーせず、文字量・端末配置・色の雰囲気だけを使います。`);
                 setActivePanel("ストア画像");
               }}
@@ -1068,7 +1096,9 @@ function ReferencePanel({
       {referenceStatus === "loading" ? <div className="mb-3 rounded-md border border-white/10 bg-white/[0.04] p-2 text-xs text-slate-300">App Storeランキングから参考画像を取得しています...</div> : null}
       {referenceStatus === "error" ? <div className="mb-3 rounded-md border border-amber-300/30 bg-amber-300/10 p-2 text-xs text-amber-100">ライブ取得に失敗したため、デモ参考を表示しています。</div> : null}
       <div className="space-y-3">
-        {referenceApps.map((app) => (
+        {referenceApps.map((app) => {
+          const hints = referenceHintLines(app);
+          return (
           <article key={app.id} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
             <div className="flex gap-3">
               {app.iconUrl ? <ReferenceImage src={app.iconUrl} className="h-10 w-10 rounded-lg object-cover" /> : <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-teal-200 to-amber-200" />}
@@ -1088,7 +1118,10 @@ function ReferencePanel({
               <div className="mt-3 rounded-md border border-dashed border-white/10 bg-black/15 px-3 py-4 text-center text-xs text-slate-500">このアプリは取得可能なストア画像がありません</div>
             )}
             <div className="mt-3 rounded-md bg-black/20 p-2 text-xs leading-5 text-slate-300">
-              抽出するヒント: 1枚目は短い価値訴求、端末は中央、背景は明るめ、長文は避ける。
+              <div className="mb-1 font-semibold text-slate-200">抽出するヒント</div>
+              <ul className="space-y-1">
+                {hints.map((hint) => <li key={hint}>{hint}</li>)}
+              </ul>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <button onClick={() => useInspiration(app)} className="rounded-md bg-white/8 px-3 py-2 text-xs font-semibold text-white hover:bg-white/12">構成だけ参考</button>
@@ -1099,7 +1132,8 @@ function ReferencePanel({
               )}
             </div>
           </article>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
