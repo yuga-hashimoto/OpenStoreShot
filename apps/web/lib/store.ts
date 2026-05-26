@@ -16,6 +16,7 @@ type StudioState = {
   selectedLayerIds: string[];
   zoom: number;
   history: HistoryState;
+  loadProject: (project: StoreShotProject) => void;
   selectSlide: (slideId: string) => void;
   addStoreImage: () => void;
   applyStoreImageTemplate: (template: "panorama" | "feature" | "editorial") => void;
@@ -62,6 +63,16 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   selectedLayerIds: ["headline"],
   zoom: 0.2,
   history: { past: [], future: [] },
+  loadProject: (project) => {
+    const firstSlide = project.slides[0];
+    set({
+      project,
+      selectedSlideId: firstSlide?.id ?? "",
+      selectedArtboardId: firstSlide?.artboards[0]?.id ?? "",
+      selectedLayerIds: firstSlide?.artboards[0]?.layers[0]?.id ? [firstSlide.artboards[0].layers[0].id] : [],
+      history: { past: [], future: [] }
+    });
+  },
   selectSlide: (slideId) => {
     const slide = get().project.slides.find((item) => item.id === slideId);
     if (!slide) return;

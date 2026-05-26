@@ -6,6 +6,7 @@ const checks = [];
 const agentDefs = [
   { id: "codex", label: "Codex CLI", command: "codex --version", recommended: true },
   { id: "claude", label: "Claude Code", command: "claude --version" },
+  { id: "antigravity", label: "Antigravity CLI", command: "agy --version" },
   { id: "gemini", label: "Gemini CLI", command: "gemini --version" },
   { id: "opencode", label: "OpenCode", command: "opencode --version" },
   { id: "cursor-agent", label: "Cursor Agent", command: "cursor-agent --version" },

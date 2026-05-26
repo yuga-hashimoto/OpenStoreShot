@@ -21,9 +21,15 @@ import { validateProject, type Layer, type StoreShotProject } from "@openstoresh
 import { fixtureReferences } from "@openstoreshot/store-fetch";
 import type { StoreReferenceApp } from "@openstoreshot/store-fetch";
 import { useStudioStore } from "../lib/store";
-import { isLocale, localeLabels, locales, messagesFor, type Locale } from "../lib/i18n";
+import { isLocale, localeLabels, locales, messagesFor, resolveBrowserLocale, type Locale } from "../lib/i18n";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import type { LucideIcon } from "lucide-react";
+import { OnboardingOverlay, type OnboardingResult } from "./OnboardingOverlay";
+import { agentNameById, MANUAL_AGENT_ID } from "../lib/agents";
+
+const ONBOARDING_DISMISSED_KEY = "openstoreshot.onboarding.dismissed";
+const SELECTED_AGENT_KEY = "openstoreshot.agent";
+const SELECTED_PROJECT_DIR_KEY = "openstoreshot.projectDir";
 
 type ActivePanel = "ストア画像" | "素材" | "参考" | "ブランド" | "JSON";
 type StudioMessages = ReturnType<typeof messagesFor>;
@@ -146,7 +152,47 @@ export function StudioApp() {
   const [exportFiles, setExportFiles] = useState<ExportFile[]>([]);
   const [layerMenu, setLayerMenu] = useState<LayerMenuState | null>(null);
   const [locale, setLocale] = useState<Locale>("ja-JP");
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(MANUAL_AGENT_ID);
+  const [projectDir, setProjectDir] = useState<string | null>(null);
   const t = messagesFor(locale);
+  const agentName = agentNameById(selectedAgentId);
+
+  useEffect(() => {
+    setLocale(resolveBrowserLocale(window.navigator.language));
+    const savedAgent = window.localStorage.getItem(SELECTED_AGENT_KEY);
+    if (savedAgent) setSelectedAgentId(savedAgent);
+    const savedDir = window.localStorage.getItem(SELECTED_PROJECT_DIR_KEY);
+    if (savedDir) setProjectDir(savedDir);
+    const dismissed = window.localStorage.getItem(ONBOARDING_DISMISSED_KEY) === "true";
+    if (!dismissed) setShowOnboarding(true);
+  }, []);
+
+  const loadProject = state.loadProject;
+  useEffect(() => {
+    if (!projectDir) return;
+    let active = true;
+    fetch(`/api/project?dir=${encodeURIComponent(projectDir)}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((json: { project?: StoreShotProject } | null) => {
+        if (active && json?.project) loadProject(json.project);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [projectDir, loadProject]);
+
+  function completeOnboarding(dontShowAgain: boolean, result: OnboardingResult) {
+    window.localStorage.setItem(SELECTED_AGENT_KEY, result.agentId);
+    setSelectedAgentId(result.agentId);
+    if (result.projectDir) {
+      window.localStorage.setItem(SELECTED_PROJECT_DIR_KEY, result.projectDir);
+      setProjectDir(result.projectDir);
+    }
+    if (dontShowAgain) window.localStorage.setItem(ONBOARDING_DISMISSED_KEY, "true");
+    setShowOnboarding(false);
+  }
   const { project, selectedSlideId, selectedArtboardId, selectedLayerIds, zoom } = state;
   const slide = project.slides.find((item) => item.id === selectedSlideId) ?? project.slides[0]!;
   const artboard = slide.artboards.find((item) => item.id === selectedArtboardId) ?? slide.artboards[0]!;
@@ -252,6 +298,8 @@ export function StudioApp() {
   }
 
   return (
+    <>
+    {showOnboarding ? <OnboardingOverlay t={t} onComplete={completeOnboarding} /> : null}
     <div className="flex h-screen w-full overflow-hidden bg-studio-ink text-slate-100">
       <aside className="flex w-[52px] flex-col items-center gap-2 border-r border-white/10 bg-[#09111f] py-4 xl:w-[68px]">
         {navItems.map(([label, Icon]) => (
@@ -314,6 +362,7 @@ export function StudioApp() {
               <ManualAdjustPanel selectedLayer={selectedLayer} updateLayer={state.updateLayer} duplicateLayer={state.duplicateLayer} deleteLayer={state.deleteLayer} t={t} />
               <CodexRequestPanel
                 t={t}
+                agentName={agentName}
                 requestStatus={requestStatus}
                 inspirationNotice={inspirationNotice}
                 reviewInstruction={reviewInstruction}
@@ -523,6 +572,7 @@ export function StudioApp() {
         />
       ) : null}
     </div>
+    </>
   );
 }
 
@@ -898,6 +948,7 @@ function ManualAdjustPanel({
 
 function CodexRequestPanel({
   t,
+  agentName,
   requestStatus,
   inspirationNotice,
   reviewInstruction,
@@ -906,6 +957,7 @@ function CodexRequestPanel({
   submitCodexRequest
 }: {
   t: StudioMessages;
+  agentName: string | null;
   requestStatus: "idle" | "saving" | "saved" | "error";
   inspirationNotice: string | null;
   reviewInstruction: string;
@@ -913,10 +965,12 @@ function CodexRequestPanel({
   setReviewInstruction: (value: string) => void;
   submitCodexRequest: () => void;
 }) {
+  const agent = agentName ?? t["codex.agentFallback"];
+  const withAgent = (message: string) => message.replace("{agent}", agent);
   return (
     <section className="mt-6 rounded-lg border border-teal-300/20 bg-teal-300/[0.06] p-3">
-      <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-teal-100"><Sparkles className="h-4 w-4" />{t["codex.title"]}</div>
-      <p className="mb-3 text-xs leading-5 text-slate-400">{t["codex.description"]}</p>
+      <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-teal-100"><Sparkles className="h-4 w-4" />{withAgent(t["codex.title"])}</div>
+      <p className="mb-3 text-xs leading-5 text-slate-400">{withAgent(t["codex.description"])}</p>
       {inspirationNotice ? (
         <div className="mb-3 rounded-md border border-amber-300/30 bg-amber-300/10 p-2 text-xs leading-5 text-amber-100">
           {inspirationNotice}
@@ -939,10 +993,10 @@ function CodexRequestPanel({
         ))}
       </div>
       <button onClick={submitCodexRequest} className="mt-3 w-full rounded-md bg-teal-300 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-200">
-        {requestStatus === "saving" ? "依頼を保存中..." : "Codex依頼キューに追加"}
+        {requestStatus === "saving" ? t["codex.saving"] : withAgent(t["codex.submit"])}
       </button>
-      {requestStatus === "saved" ? <div className="mt-2 text-xs text-teal-200">依頼を保存しました。Codexがこの内容を読んで修正できます。</div> : null}
-      {requestStatus === "error" ? <div className="mt-2 text-xs text-red-200">依頼の保存に失敗しました。</div> : null}
+      {requestStatus === "saved" ? <div className="mt-2 text-xs text-teal-200">{withAgent(t["codex.saved"])}</div> : null}
+      {requestStatus === "error" ? <div className="mt-2 text-xs text-red-200">{t["codex.saveError"]}</div> : null}
     </section>
   );
 }

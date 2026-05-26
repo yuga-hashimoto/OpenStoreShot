@@ -33,6 +33,7 @@ examples/demo-project/storeshot.project.json
 | --- | --- | --- |
 | Codex CLI | `codex` | Recommended default local coding agent |
 | Claude Code | `claude` | Compatible local coding agent |
+| Antigravity CLI | `agy` | Compatible local coding agent |
 | Gemini CLI | `gemini` | Compatible local coding agent |
 | OpenCode | `opencode` | Compatible local coding agent |
 | Cursor Agent | `cursor-agent` | Compatible local coding agent |
