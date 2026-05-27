@@ -183,14 +183,13 @@ export function StudioApp() {
     };
   }, [projectDir, loadProject]);
 
-  function completeOnboarding(dontShowAgain: boolean, result: OnboardingResult) {
+  function completeOnboarding(result: OnboardingResult) {
     window.localStorage.setItem(SELECTED_AGENT_KEY, result.agentId);
     setSelectedAgentId(result.agentId);
     if (result.projectDir) {
       window.localStorage.setItem(SELECTED_PROJECT_DIR_KEY, result.projectDir);
       setProjectDir(result.projectDir);
     }
-    if (dontShowAgain) window.localStorage.setItem(ONBOARDING_DISMISSED_KEY, "true");
     setShowOnboarding(false);
   }
   const { project, selectedSlideId, selectedArtboardId, selectedLayerIds, zoom } = state;

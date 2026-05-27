@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { StoreReferenceApp } from "@openstoreshot/store-fetch";
 import type { messagesFor } from "../../lib/i18n";
 import { MANUAL_AGENT_ID } from "../../lib/agents";
+import type { BriefState } from "./BriefStep";
 
 type StudioMessages = ReturnType<typeof messagesFor>;
 
@@ -15,7 +16,13 @@ interface GenerateStepProps {
   projectDir: string | null;
   hasProject: boolean;
   references: StoreReferenceApp[];
+  brief: BriefState;
   onGenerated: () => void;
+}
+
+interface ValidationIssue {
+  severity: "error" | "warning";
+  message: string;
 }
 
 interface GenerateResult {
@@ -25,9 +32,11 @@ interface GenerateResult {
   stdout?: string;
   stderr?: string;
   error?: string;
+  issues?: ValidationIssue[];
+  parseError?: string;
 }
 
-export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, references, onGenerated }: GenerateStepProps) {
+export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, references, brief, onGenerated }: GenerateStepProps) {
   const [status, setStatus] = useState<"idle" | "running" | "done" | "error">("idle");
   const [result, setResult] = useState<GenerateResult | null>(null);
 
@@ -46,6 +55,7 @@ export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, re
           agentId,
           projectDir,
           hasProject,
+          brief,
           references: references.map((ref) => ({
             appName: ref.appName,
             category: ref.category,
@@ -56,7 +66,8 @@ export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, re
       });
       const json = (await response.json()) as GenerateResult;
       setResult(json);
-      if (json.ok) {
+      const errorCount = (json.issues ?? []).filter((issue) => issue.severity === "error").length;
+      if (json.ok && errorCount === 0) {
         setStatus("done");
         onGenerated();
       } else {
@@ -125,10 +136,38 @@ export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, re
             <AlertTriangle className="h-4 w-4" />
             {t["onboarding.generateError"]}
           </div>
+          {(result?.issues ?? []).length > 0 ? (
+            <ul className="max-h-32 overflow-auto rounded-md bg-black/30 p-2 text-[11px] leading-4">
+              {result!.issues!.slice(0, 8).map((issue, index) => (
+                <li
+                  key={index}
+                  className={issue.severity === "error" ? "text-red-200" : "text-amber-200"}
+                  data-testid={`generate-issue-${issue.severity}`}
+                >
+                  {issue.severity.toUpperCase()}: {issue.message}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {result?.parseError ? (
+            <pre className="max-h-24 overflow-auto rounded-md bg-black/40 p-2 text-[11px] leading-4 text-red-200">
+              {result.parseError}
+            </pre>
+          ) : null}
           {result?.stderr || result?.stdout ? (
             <pre className="max-h-32 overflow-auto rounded-md bg-black/40 p-2 text-[11px] leading-4 text-slate-400">
               {(result.stderr || result.stdout || "").trim()}
             </pre>
+          ) : null}
+          {result?.wrote ? (
+            <button
+              type="button"
+              data-testid="generate-open-anyway"
+              onClick={onGenerated}
+              className="mt-2 inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/8"
+            >
+              {t["onboarding.generateOpenAnyway"]}
+            </button>
           ) : null}
         </div>
       ) : null}

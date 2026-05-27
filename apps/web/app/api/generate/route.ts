@@ -1,16 +1,28 @@
 import { spawn } from "node:child_process";
-import { access, stat } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import { constants } from "node:fs";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { StoreShotProjectSchema, validateProject } from "@openstoreshot/core";
 import { buildAgentInvocation, type AgentInvocation } from "../../../lib/agents";
 import { buildGenerationPrompt } from "../../../lib/generatePrompt";
+
+const BriefSchema = z
+  .object({
+    appName: z.string().optional(),
+    intent: z.string().optional(),
+    slideCount: z.number().int().min(1).max(20).optional(),
+    platforms: z.array(z.enum(["ios", "android"])).optional(),
+    locale: z.string().optional()
+  })
+  .optional();
 
 const GenerateSchema = z.object({
   agentId: z.string(),
   projectDir: z.string().min(1),
   hasProject: z.boolean().default(false),
+  brief: BriefSchema,
   references: z
     .array(
       z.object({
@@ -23,7 +35,7 @@ const GenerateSchema = z.object({
     .default([])
 });
 
-const GENERATION_TIMEOUT_MS = 300_000;
+const GENERATION_TIMEOUT_MS = 600_000;
 
 function runAgent(invocation: AgentInvocation, cwd: string): Promise<{ code: number | null; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
@@ -72,22 +84,45 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "not_writable" }, { status: 400 });
   }
 
-  const prompt = buildGenerationPrompt({ references: parsed.references, hasProject: parsed.hasProject });
+  const prompt = buildGenerationPrompt({
+    references: parsed.references,
+    hasProject: parsed.hasProject,
+    brief: parsed.brief
+  });
   const invocation = buildAgentInvocation(parsed.agentId, prompt);
   if (!invocation) {
     return NextResponse.json({ error: "manual_agent", prompt }, { status: 400 });
   }
 
   const result = await runAgent(invocation, parsed.projectDir);
-  const wrote = await access(join(parsed.projectDir, "storeshot.project.json"), constants.F_OK).then(
+  const projectPath = join(parsed.projectDir, "storeshot.project.json");
+  const wrote = await access(projectPath, constants.F_OK).then(
     () => true,
     () => false
   );
 
+  let issues: Array<{ severity: "error" | "warning"; message: string }> = [];
+  let parseError: string | undefined;
+  if (wrote) {
+    try {
+      const raw = await readFile(projectPath, "utf8");
+      const project = StoreShotProjectSchema.parse(JSON.parse(raw));
+      issues = validateProject(project).map((issue) => ({
+        severity: issue.severity,
+        message: issue.message
+      }));
+    } catch (error) {
+      parseError = error instanceof Error ? error.message : String(error);
+    }
+  }
+  const errorCount = issues.filter((issue) => issue.severity === "error").length;
+
   return NextResponse.json({
-    ok: result.code === 0 && wrote,
+    ok: result.code === 0 && wrote && !parseError && errorCount === 0,
     wrote,
     exitCode: result.code,
+    issues,
+    parseError,
     stdout: tail(result.stdout),
     stderr: tail(result.stderr)
   });

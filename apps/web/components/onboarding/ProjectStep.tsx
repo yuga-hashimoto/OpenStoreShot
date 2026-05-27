@@ -19,9 +19,10 @@ interface ProjectStepProps {
   selectedDir: string | null;
   selectedHasProject: boolean;
   onSelect: (dir: string, hasProject: boolean) => void;
+  onUseExisting: () => void;
 }
 
-export function ProjectStep({ t, selectedDir, selectedHasProject, onSelect }: ProjectStepProps) {
+export function ProjectStep({ t, selectedDir, selectedHasProject, onSelect, onUseExisting }: ProjectStepProps) {
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notWritable, setNotWritable] = useState(false);
@@ -81,6 +82,21 @@ export function ProjectStep({ t, selectedDir, selectedHasProject, onSelect }: Pr
             )}
             {notWritable ? <span className="text-amber-200">{t["onboarding.projectNotWritable"]}</span> : null}
           </div>
+        </div>
+      ) : null}
+
+      {selectedDir && selectedHasProject ? (
+        <div className="mt-3 rounded-md border border-white/10 bg-white/[0.03] p-3" data-testid="existing-project-prompt">
+          <p className="text-xs leading-5 text-slate-300">{t["onboarding.projectExistingFound"]}</p>
+          <button
+            type="button"
+            data-testid="use-existing-project"
+            onClick={onUseExisting}
+            className="mt-2.5 inline-flex items-center justify-center gap-2 rounded-md bg-teal-300 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-teal-200"
+          >
+            {t["onboarding.projectUseExisting"]}
+          </button>
+          <p className="mt-2 text-[11px] text-slate-500">{t["onboarding.projectRegenerateHint"]}</p>
         </div>
       ) : null}
     </section>

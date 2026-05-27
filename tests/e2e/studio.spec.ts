@@ -107,3 +107,25 @@ test("studio loads the chosen project directory after generation", async ({ page
     rmSync(projectDir, { recursive: true, force: true });
   }
 });
+
+test("onboarding detects an existing project and opens it for editing", async ({ page }) => {
+  const demoDir = resolve("examples/demo-project");
+  // Mock the OS-native folder picker to return a folder that already has a project.
+  await page.route("**/api/fs", async (route) => {
+    await route.fulfill({ json: { path: demoDir, writable: true, hasProject: true } });
+  });
+  // This test needs the wizard, so undo the beforeEach dismissal.
+  await page.addInitScript(() => {
+    window.localStorage.removeItem("openstoreshot.onboarding.dismissed");
+  });
+
+  await page.goto("/");
+  await expect(page.getByTestId("onboarding-overlay")).toBeVisible();
+  await page.getByTestId("onboarding-next").click(); // agent -> project
+  await page.getByTestId("fs-pick-folder").click();
+  await expect(page.getByTestId("existing-project-prompt")).toBeVisible();
+  await page.getByTestId("use-existing-project").click();
+
+  await expect(page.getByTestId("onboarding-overlay")).toBeHidden();
+  await expect(page.getByText("あなたのアプリ ストア画像制作")).toBeVisible();
+});

@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import type { messagesFor } from "../lib/i18n";
 import type { StoreReferenceApp } from "@openstoreshot/store-fetch";
 import { agentDefs, agentNameById, MANUAL_AGENT_ID, type AgentStatus } from "../lib/agents";
+import { resolveBrowserLocale, type Locale } from "../lib/i18n";
 import { AgentStep } from "./onboarding/AgentStep";
 import { ProjectStep } from "./onboarding/ProjectStep";
+import { BriefStep, type BriefState } from "./onboarding/BriefStep";
 import { ReferenceStep } from "./onboarding/ReferenceStep";
 import { GenerateStep } from "./onboarding/GenerateStep";
 
@@ -17,15 +19,27 @@ export interface OnboardingResult {
   projectDir: string | null;
   projectHasProject: boolean;
   references: StoreReferenceApp[];
+  brief: BriefState;
 }
 
 interface OnboardingOverlayProps {
   t: StudioMessages;
-  onComplete: (dontShowAgain: boolean, result: OnboardingResult) => void;
+  onComplete: (result: OnboardingResult) => void;
 }
 
-type StepId = "agent" | "project" | "references" | "generate";
-const STEP_ORDER: StepId[] = ["agent", "project", "references", "generate"];
+type StepId = "agent" | "project" | "brief" | "references" | "generate";
+const STEP_ORDER: StepId[] = ["agent", "project", "brief", "references", "generate"];
+
+function defaultBrief(): BriefState {
+  const locale: Locale = typeof window === "undefined" ? "ja-JP" : resolveBrowserLocale(window.navigator.language);
+  return {
+    appName: "",
+    intent: "",
+    slideCount: 5,
+    platforms: ["ios", "android"],
+    locale
+  };
+}
 
 function pickDefaultAgent(agents: AgentStatus[]): string {
   const recommended = agents.find((agent) => agent.recommended && agent.available);
@@ -37,11 +51,11 @@ function pickDefaultAgent(agents: AgentStatus[]): string {
 
 export function OnboardingOverlay({ t, onComplete }: OnboardingOverlayProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
   const [agents, setAgents] = useState<AgentStatus[] | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<string>(MANUAL_AGENT_ID);
   const [projectDir, setProjectDir] = useState<string | null>(null);
   const [projectHasProject, setProjectHasProject] = useState(false);
+  const [brief, setBrief] = useState<BriefState>(defaultBrief);
   const [references, setReferences] = useState<StoreReferenceApp[]>([]);
 
   useEffect(() => {
@@ -66,6 +80,7 @@ export function OnboardingOverlay({ t, onComplete }: OnboardingOverlayProps) {
   const stepLabels: Record<StepId, string> = {
     agent: t["onboarding.stepAgent"],
     project: t["onboarding.stepProject"],
+    brief: t["onboarding.stepBrief"],
     references: t["onboarding.stepReferences"],
     generate: t["onboarding.stepGenerate"]
   };
@@ -73,9 +88,13 @@ export function OnboardingOverlay({ t, onComplete }: OnboardingOverlayProps) {
   const isLastStep = stepIndex === STEP_ORDER.length - 1;
   const canProceed = currentStep === "project" ? projectDir !== null : true;
 
+  function finish(overrides?: Partial<OnboardingResult>) {
+    onComplete({ agentId: selectedAgentId, projectDir, projectHasProject, references, brief, ...overrides });
+  }
+
   function goNext() {
     if (isLastStep) {
-      onComplete(dontShowAgain, { agentId: selectedAgentId, projectDir, projectHasProject, references });
+      finish();
     } else {
       setStepIndex((index) => index + 1);
     }
@@ -140,7 +159,11 @@ export function OnboardingOverlay({ t, onComplete }: OnboardingOverlayProps) {
                 setProjectDir(dir);
                 setProjectHasProject(hasProject);
               }}
+              onUseExisting={() => finish({ projectHasProject: true, references: [] })}
             />
+          ) : null}
+          {currentStep === "brief" ? (
+            <BriefStep t={t} value={brief} onChange={setBrief} />
           ) : null}
           {currentStep === "references" ? (
             <ReferenceStep t={t} selected={references} onToggle={toggleReference} />
@@ -153,21 +176,13 @@ export function OnboardingOverlay({ t, onComplete }: OnboardingOverlayProps) {
               projectDir={projectDir}
               hasProject={projectHasProject}
               references={references}
-              onGenerated={() => setProjectHasProject(true)}
+              brief={brief}
+              onGenerated={() => finish({ projectHasProject: true })}
             />
           ) : null}
         </div>
 
-        <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-400">
-            <input
-              type="checkbox"
-              checked={dontShowAgain}
-              onChange={(event) => setDontShowAgain(event.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-black/30 accent-teal-400"
-            />
-            {t["onboarding.dontShowAgain"]}
-          </label>
+        <div className="mt-7 flex items-center justify-end gap-2">
           <div className="flex items-center gap-2">
             {stepIndex > 0 ? (
               <button

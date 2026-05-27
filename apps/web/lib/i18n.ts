@@ -104,6 +104,9 @@ const ja = {
   "onboarding.projectNotWritable": "書き込み不可",
   "onboarding.projectError": "フォルダを選択できませんでした。",
   "onboarding.projectUnsupported": "このOSではフォルダ選択に対応していません。",
+  "onboarding.projectExistingFound": "このフォルダに既存のストア画像プロジェクトが見つかりました。これを編集しますか？",
+  "onboarding.projectUseExisting": "このプロジェクトを編集",
+  "onboarding.projectRegenerateHint": "または「次へ」で参考から作り直せます。",
   "onboarding.stepReferences": "参考",
   "onboarding.referencesTitle": "ストアから参考を選ぶ",
   "onboarding.referencesNote": "App Store / Google Play から参考にするアプリを選びます（複数可）。画像はコピーせず、構成・文字量・色の雰囲気だけを参考にします。",
@@ -119,7 +122,19 @@ const ja = {
   "onboarding.generateWait": "エージェントを起動しています。数十秒〜数分かかることがあります。",
   "onboarding.generateDone": "生成しました。スタジオで確認・調整できます。",
   "onboarding.generateError": "生成に失敗しました。出力を確認してください。",
-  "onboarding.generateManual": "手動編集モードではエージェント生成は行いません。スタジオで手動編集するか、後でエージェントを選び直してください。"
+  "onboarding.generateManual": "手動編集モードではエージェント生成は行いません。スタジオで手動編集するか、後でエージェントを選び直してください。",
+  "onboarding.generateOpenAnyway": "問題があってもスタジオで開く",
+  "onboarding.stepBrief": "概要",
+  "onboarding.briefTitle": "ストア画像の方針を入力",
+  "onboarding.briefNote": "あなたの意向が生成品質を大きく左右します。意向は短くても具体的に書くほど結果が良くなります。",
+  "onboarding.briefIntent": "意向プロンプト",
+  "onboarding.briefIntentPlaceholder": "例: 副業ワーカー向け。1枚目で「30秒で記録」を強調。トーンは落ち着いた信頼感。スクショ中心、文字は最小限。",
+  "onboarding.briefIntentHint": "強調したい機能・ターゲット・トーン・避けたい表現などを書いてください。",
+  "onboarding.briefAppName": "アプリ名（任意）",
+  "onboarding.briefAppNamePlaceholder": "未入力ならREADME等から推定します",
+  "onboarding.briefSlideCount": "スライド枚数",
+  "onboarding.briefPlatforms": "プラットフォーム",
+  "onboarding.briefLocale": "コピーの言語"
 } as const;
 
 type MessageKey = keyof typeof ja;
@@ -198,6 +213,9 @@ const partialMessages: Record<Exclude<Locale, "ja-JP">, Partial<Messages>> = {
     "onboarding.projectNotWritable": "Not writable",
     "onboarding.projectError": "Could not select the folder.",
     "onboarding.projectUnsupported": "Folder picker isn't supported on this OS.",
+    "onboarding.projectExistingFound": "An existing store-image project was found in this folder. Edit it?",
+    "onboarding.projectUseExisting": "Edit this project",
+    "onboarding.projectRegenerateHint": "Or continue with “Next” to recreate it from references.",
     "onboarding.stepReferences": "References",
     "onboarding.referencesTitle": "Choose references from the store",
     "onboarding.referencesNote": "Pick apps from the App Store / Google Play to reference (multiple allowed). Never copy images — only borrow composition, copy length, and color mood.",
@@ -213,7 +231,19 @@ const partialMessages: Record<Exclude<Locale, "ja-JP">, Partial<Messages>> = {
     "onboarding.generateWait": "Starting the agent. This can take from tens of seconds to a few minutes.",
     "onboarding.generateDone": "Generated. You can review and adjust it in the studio.",
     "onboarding.generateError": "Generation failed. Check the output below.",
-    "onboarding.generateManual": "Manual mode skips agent generation. Edit manually in the studio, or pick an agent later."
+    "onboarding.generateManual": "Manual mode skips agent generation. Edit manually in the studio, or pick an agent later.",
+    "onboarding.generateOpenAnyway": "Open in studio anyway",
+    "onboarding.stepBrief": "Brief",
+    "onboarding.briefTitle": "Tell the agent what you want",
+    "onboarding.briefNote": "Your intent strongly shapes the output. The more specific the brief, the better the result.",
+    "onboarding.briefIntent": "Intent prompt",
+    "onboarding.briefIntentPlaceholder": "e.g. For side-hustle workers. Headline 1 emphasizes “log in 30 seconds”. Calm, trustworthy tone. Screenshot-led, minimal copy.",
+    "onboarding.briefIntentHint": "Describe key features to highlight, target audience, tone, and things to avoid.",
+    "onboarding.briefAppName": "App name (optional)",
+    "onboarding.briefAppNamePlaceholder": "Inferred from README if blank",
+    "onboarding.briefSlideCount": "Slide count",
+    "onboarding.briefPlatforms": "Platforms",
+    "onboarding.briefLocale": "Copy language"
   },
   "zh-CN": {
     "nav.storeImages": "商店图片",
