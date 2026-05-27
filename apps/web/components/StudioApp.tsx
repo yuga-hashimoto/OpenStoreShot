@@ -15,7 +15,8 @@ import {
   Search,
   Sparkles,
   Trash2,
-  Undo2
+  Undo2,
+  Wand2
 } from "lucide-react";
 import { validateProject, type Layer, type StoreShotProject } from "@openstoreshot/core";
 import { fixtureReferences } from "@openstoreshot/store-fetch";
@@ -423,6 +424,18 @@ export function StudioApp() {
             </select>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              data-testid="top-restart-setup"
+              title={t["top.restartSetup"]}
+              onClick={() => {
+                window.localStorage.removeItem(ONBOARDING_DISMISSED_KEY);
+                setShowOnboarding(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/8"
+            >
+              <Wand2 className="h-4 w-4" />
+              {t["top.restartSetup"]}
+            </button>
             <button className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/8"><Eye className="h-4 w-4" />{t["top.preview"]}</button>
             <button className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/8"><CheckCircle2 className="h-4 w-4" />{t["top.validate"]}</button>
             <button onClick={exportProject} data-testid="export-button" className="inline-flex items-center gap-2 rounded-md bg-teal-300 px-3 py-1.5 text-sm font-semibold text-slate-950 hover:bg-teal-200"><Download className="h-4 w-4" />{exportStatus === "rendering" ? t["top.exporting"] : t["top.export"]}</button>
