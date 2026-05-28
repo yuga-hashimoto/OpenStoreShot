@@ -32,6 +32,10 @@ describe("agent registry", () => {
     const codex = buildAgentInvocation("codex", "PROMPT");
     expect(codex?.args).toContain("exec");
 
+    const codexJson = buildAgentInvocation("codex", "PROMPT", { jsonResponse: true });
+    expect(codexJson?.args).toContain("--output-last-message");
+    expect(codexJson?.outputFile).toBe(".storeshot-agent-output.txt");
+
     const gemini = buildAgentInvocation("gemini", "PROMPT");
     expect(gemini?.args).toContain("PROMPT");
     expect(gemini?.input).toBeUndefined();

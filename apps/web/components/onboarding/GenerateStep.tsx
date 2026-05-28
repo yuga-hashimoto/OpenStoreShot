@@ -1,10 +1,12 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2, Cpu, FolderOpen, Library, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { StoreReferenceApp } from "@openstoreshot/store-fetch";
+import type { StoreShotProject } from "@openstoreshot/core";
 import type { messagesFor } from "../../lib/i18n";
 import { MANUAL_AGENT_ID } from "../../lib/agents";
+import { referenceDesignPatterns } from "../../lib/referenceDesign";
 import type { BriefState } from "./BriefStep";
 
 type StudioMessages = ReturnType<typeof messagesFor>;
@@ -17,7 +19,7 @@ interface GenerateStepProps {
   hasProject: boolean;
   references: StoreReferenceApp[];
   brief: BriefState;
-  onGenerated: () => void;
+  onGenerated: (project?: StoreShotProject) => void;
 }
 
 interface ValidationIssue {
@@ -34,14 +36,31 @@ interface GenerateResult {
   error?: string;
   issues?: ValidationIssue[];
   parseError?: string;
+  project?: StoreShotProject;
+  timedOut?: boolean;
+  durationMs?: number;
+  jobId?: string;
+  running?: boolean;
+  status?: "running" | "done" | "error";
+  logs?: string[];
 }
 
 export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, references, brief, onGenerated }: GenerateStepProps) {
   const [status, setStatus] = useState<"idle" | "running" | "done" | "error">("idle");
   const [result, setResult] = useState<GenerateResult | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const isManual = agentId === MANUAL_AGENT_ID;
   const canGenerate = !isManual && projectDir !== null && status !== "running";
+
+  useEffect(() => {
+    if (status !== "running") return;
+    setElapsedSeconds(0);
+    const id = window.setInterval(() => {
+      setElapsedSeconds((seconds) => seconds + 1);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [status]);
 
   async function generate() {
     if (!projectDir) return;
@@ -57,24 +76,57 @@ export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, re
           hasProject,
           brief,
           references: references.map((ref) => ({
+            id: ref.id,
+            platform: ref.platform,
             appName: ref.appName,
+            developer: ref.developer,
             category: ref.category,
             rating: ref.rating,
-            screenshotUrls: ref.screenshotUrls
+            source: ref.source,
+            storeUrl: ref.storeUrl,
+            screenshotUrls: ref.screenshotUrls,
+            patterns: referenceDesignPatterns(ref)
           }))
         })
       });
       const json = (await response.json()) as GenerateResult;
-      setResult(json);
-      const errorCount = (json.issues ?? []).filter((issue) => issue.severity === "error").length;
-      if (json.ok && errorCount === 0) {
-        setStatus("done");
-        onGenerated();
-      } else {
-        setStatus("error");
+      if (json.jobId && json.running) {
+        setResult(json);
+        pollJob(json.jobId);
+        return;
       }
+      finishFromResult(json);
     } catch {
       setResult({ error: "request_failed" });
+      setStatus("error");
+    }
+  }
+
+  function finishFromResult(json: GenerateResult) {
+    setResult(json);
+    const errorCount = (json.issues ?? []).filter((issue) => issue.severity === "error").length;
+    if (json.ok && errorCount === 0) {
+      setStatus("done");
+      onGenerated(json.project);
+    } else {
+      setStatus("error");
+    }
+  }
+
+  async function pollJob(jobId: string) {
+    try {
+      while (true) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1500));
+        const response = await fetch(`/api/generate?jobId=${encodeURIComponent(jobId)}`);
+        const json = (await response.json()) as GenerateResult;
+        setResult(json);
+        if (!json.running) {
+          finishFromResult(json);
+          return;
+        }
+      }
+    } catch {
+      setResult({ error: "poll_failed" });
       setStatus("error");
     }
   }
@@ -120,7 +172,16 @@ export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, re
       )}
 
       {status === "running" ? (
-        <p className="mt-3 text-xs leading-5 text-slate-400">{t["onboarding.generateWait"]}</p>
+        <div className="mt-3 space-y-2">
+          <p className="text-xs leading-5 text-slate-400">
+            {t["onboarding.generateWait"]} ({elapsedSeconds}s)
+          </p>
+          {(result?.logs ?? []).length > 0 ? (
+            <pre className="max-h-40 overflow-auto rounded-md bg-black/40 p-2 text-[11px] leading-4 text-slate-300" data-testid="generate-progress-log">
+              {result!.logs!.slice(-12).join("\n")}
+            </pre>
+          ) : null}
+        </div>
       ) : null}
 
       {status === "done" ? (
@@ -149,6 +210,11 @@ export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, re
               ))}
             </ul>
           ) : null}
+          {result?.timedOut ? (
+            <div className="rounded-md bg-black/30 p-2 text-[11px] leading-4 text-red-200">
+              Agent timed out after {Math.round((result.durationMs ?? 0) / 1000)}s before producing a valid project.
+            </div>
+          ) : null}
           {result?.parseError ? (
             <pre className="max-h-24 overflow-auto rounded-md bg-black/40 p-2 text-[11px] leading-4 text-red-200">
               {result.parseError}
@@ -156,14 +222,17 @@ export function GenerateStep({ t, agentId, agentName, projectDir, hasProject, re
           ) : null}
           {result?.stderr || result?.stdout ? (
             <pre className="max-h-32 overflow-auto rounded-md bg-black/40 p-2 text-[11px] leading-4 text-slate-400">
-              {(result.stderr || result.stdout || "").trim()}
+              {[
+                result.durationMs ? `elapsed: ${Math.round(result.durationMs / 1000)}s` : null,
+                (result.stderr || result.stdout || "").trim()
+              ].filter(Boolean).join("\n\n")}
             </pre>
           ) : null}
           {result?.wrote ? (
             <button
               type="button"
               data-testid="generate-open-anyway"
-              onClick={onGenerated}
+              onClick={() => onGenerated(result?.project)}
               className="mt-2 inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/8"
             >
               {t["onboarding.generateOpenAnyway"]}

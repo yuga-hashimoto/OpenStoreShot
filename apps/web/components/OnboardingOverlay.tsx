@@ -3,6 +3,7 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { messagesFor } from "../lib/i18n";
+import type { StoreShotProject } from "@openstoreshot/core";
 import type { StoreReferenceApp } from "@openstoreshot/store-fetch";
 import { agentDefs, agentNameById, MANUAL_AGENT_ID, type AgentStatus } from "../lib/agents";
 import { resolveBrowserLocale, type Locale } from "../lib/i18n";
@@ -20,6 +21,7 @@ export interface OnboardingResult {
   projectHasProject: boolean;
   references: StoreReferenceApp[];
   brief: BriefState;
+  generatedProject?: StoreShotProject;
 }
 
 interface OnboardingOverlayProps {
@@ -42,9 +44,10 @@ function defaultBrief(): BriefState {
 }
 
 function pickDefaultAgent(agents: AgentStatus[]): string {
-  const recommended = agents.find((agent) => agent.recommended && agent.available);
+  const designAgents = agents.filter((agent) => agent.supportsDesignGeneration);
+  const recommended = designAgents.find((agent) => agent.recommended && agent.available);
   if (recommended) return recommended.id;
-  const firstAvailable = agents.find((agent) => agent.available);
+  const firstAvailable = designAgents.find((agent) => agent.available);
   if (firstAvailable) return firstAvailable.id;
   return MANUAL_AGENT_ID;
 }
@@ -177,7 +180,9 @@ export function OnboardingOverlay({ t, onComplete }: OnboardingOverlayProps) {
               hasProject={projectHasProject}
               references={references}
               brief={brief}
-              onGenerated={() => finish({ projectHasProject: true })}
+              onGenerated={(project) =>
+                finish(project ? { projectHasProject: true, generatedProject: project } : { projectHasProject: true })
+              }
             />
           ) : null}
         </div>

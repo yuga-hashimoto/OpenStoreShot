@@ -89,16 +89,19 @@ function layerToSvg(layer: Layer, artboard: Artboard, index: number, assets: Map
     const screenHeight = height - 36;
     const screen = screenshot
       ? `<defs><clipPath id="${clipId}"><rect x="${screenX}" y="${screenY}" width="${screenWidth}" height="${screenHeight}" rx="${innerRadius}"/></clipPath></defs><image href="${screenshot}" x="${screenX}" y="${screenY}" width="${screenWidth}" height="${screenHeight}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})"/>`
-      : `<rect x="${screenX}" y="${screenY}" width="${screenWidth}" height="${screenHeight}" rx="${innerRadius}" fill="#f8fafc"/><text x="${layer.x + width / 2}" y="${layer.y + height / 2}" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="800" fill="#64748b" text-anchor="middle">${escapeXml(appName)}</text><rect x="${layer.x + 58}" y="${layer.y + 110}" width="${width - 116}" height="140" rx="34" fill="#ccfbf1" opacity=".65"/><rect x="${layer.x + 58}" y="${layer.y + 290}" width="${width - 116}" height="32" rx="16" fill="#0f766e" opacity=".35"/><rect x="${layer.x + 58}" y="${layer.y + 345}" width="${width - 210}" height="32" rx="16" fill="#f59e0b" opacity=".28"/>`;
+      : `<rect x="${screenX}" y="${screenY}" width="${screenWidth}" height="${screenHeight}" rx="${innerRadius}" fill="#f8fafc"/><rect x="${screenX + 36}" y="${screenY + 54}" width="${screenWidth - 72}" height="104" rx="32" fill="#ccfbf1" opacity=".85"/><text x="${layer.x + width / 2}" y="${screenY + 118}" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="850" fill="#0f766e" text-anchor="middle">${escapeXml(appName)}</text><rect x="${screenX + 48}" y="${screenY + 205}" width="${screenWidth - 96}" height="64" rx="32" fill="#0f172a" opacity=".08"/><rect x="${screenX + 72}" y="${screenY + 226}" width="${screenWidth * 0.42}" height="22" rx="11" fill="#0f766e" opacity=".35"/><rect x="${screenX + 48}" y="${screenY + 330}" width="${screenWidth - 96}" height="210" rx="38" fill="#ffffff"/><rect x="${screenX + 82}" y="${screenY + 370}" width="${screenWidth * 0.58}" height="28" rx="14" fill="#0f172a" opacity=".72"/><rect x="${screenX + 82}" y="${screenY + 424}" width="${screenWidth * 0.74}" height="20" rx="10" fill="#64748b" opacity=".34"/><rect x="${screenX + 82}" y="${screenY + 470}" width="${screenWidth * 0.45}" height="48" rx="24" fill="#14b8a6" opacity=".18"/><rect x="${screenX + 48}" y="${screenY + 585}" width="${screenWidth - 96}" height="150" rx="34" fill="#eef2ff"/><rect x="${screenX + 82}" y="${screenY + 630}" width="${screenWidth * 0.66}" height="22" rx="11" fill="#4f46e5" opacity=".38"/><rect x="${screenX + 82}" y="${screenY + 678}" width="${screenWidth * 0.5}" height="18" rx="9" fill="#64748b" opacity=".28"/>`;
     return {
       defs: "",
       body: `<g opacity="${layer.opacity}"${transform}><rect x="${layer.x}" y="${layer.y}" width="${width}" height="${height}" rx="${layer.radius || 58}" fill="#0f172a"/>${screen}</g>`
     };
   }
   if (layer.type === "image" && layer.assetId && assets.has(layer.assetId)) {
+    const clipId = `clip-img-${layer.id}-${index}`.replace(/[^a-zA-Z0-9-_]/g, "");
+    const clip = layer.radius > 0 ? `<clipPath id="${clipId}"><rect x="${layer.x}" y="${layer.y}" width="${width}" height="${height}" rx="${layer.radius}"/></clipPath>` : "";
+    const clipAttr = layer.radius > 0 ? ` clip-path="url(#${clipId})"` : "";
     return {
-      defs: "",
-      body: `<image href="${assets.get(layer.assetId)}" x="${layer.x}" y="${layer.y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" opacity="${layer.opacity}"${transform}/>`
+      defs: clip,
+      body: `<image href="${assets.get(layer.assetId)}" x="${layer.x}" y="${layer.y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" opacity="${layer.opacity}"${clipAttr}${transform}/>`
     };
   }
   const fill = svgFill(layer, index);

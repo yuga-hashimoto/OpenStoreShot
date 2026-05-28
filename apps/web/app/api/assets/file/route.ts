@@ -18,7 +18,8 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const path = url.searchParams.get("path");
   if (!path) return NextResponse.json({ error: "path is required" }, { status: 400 });
-  const base = resolve(repoRoot(), "examples/demo-project");
+  const dir = url.searchParams.get("dir");
+  const base = dir ? resolve(dir) : resolve(repoRoot(), "examples/demo-project");
   const resolved = resolve(base, path);
   if (!resolved.startsWith(base)) {
     return NextResponse.json({ error: "invalid path" }, { status: 400 });

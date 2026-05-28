@@ -27,6 +27,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import type { LucideIcon } from "lucide-react";
 import { OnboardingOverlay, type OnboardingResult } from "./OnboardingOverlay";
 import { agentNameById, MANUAL_AGENT_ID } from "../lib/agents";
+import { referenceHintLines } from "../lib/referenceDesign";
 
 const ONBOARDING_DISMISSED_KEY = "openstoreshot.onboarding.dismissed";
 const SELECTED_AGENT_KEY = "openstoreshot.agent";
@@ -92,39 +93,14 @@ const fontWeightOptions = [
 type ExportFile = { path: string; name: string };
 type LayerMenuState = { layerId: string; x: number; y: number };
 
-function assetUrl(path: string) {
-  return `/api/assets/file?path=${encodeURIComponent(path)}`;
+function assetUrl(path: string, dir?: string | null) {
+  const params = new URLSearchParams({ path });
+  if (dir) params.set("dir", dir);
+  return `/api/assets/file?${params.toString()}`;
 }
 
 function referenceImageUrl(url: string) {
   return `/api/reference/image?url=${encodeURIComponent(url)}`;
-}
-
-function referenceHintLines(app: StoreReferenceApp) {
-  const category = app.category.toLowerCase();
-  const screenshotCount = app.screenshotUrls.length;
-  const lines: string[] = [];
-
-  if (category.includes("productivity") || category.includes("utilities")) {
-    lines.push("構成: 価値訴求のあとに、主要操作と具体的な利用場面を順に見せる。");
-    lines.push("情報設計: UIのスクショを大きく置き、見出しは機能名より成果ベースにする。");
-  } else if (category.includes("social")) {
-    lines.push("構成: 使う人・会話・共有体験が伝わる順番で、最初に世界観を出す。");
-    lines.push("情報設計: 画面説明よりも参加したくなる短いコピーを優先する。");
-  } else if (category.includes("food")) {
-    lines.push("構成: すぐ使える便益、注文や発見の手軽さ、安心感の順に見せる。");
-    lines.push("情報設計: 写真や色の食欲感を参考にしつつ、ロゴや固有UIはコピーしない。");
-  } else if (category.includes("shopping")) {
-    lines.push("構成: お得感、探しやすさ、購入前の安心材料を分けて見せる。");
-    lines.push("情報設計: バッジ表現は根拠がある場合だけ使い、価格訴求に寄せすぎない。");
-  } else {
-    lines.push("構成: 1枚目でベネフィット、次に主要機能、最後に信頼や行動喚起を置く。");
-    lines.push("情報設計: コピーは短く、端末内の情報と見出しが重複しすぎないようにする。");
-  }
-
-  lines.push(screenshotCount >= 5 ? `枚数設計: ${screenshotCount}枚あるため、連続ストーリーとして役割を分ける。` : "枚数設計: 少ない枚数でも、1枚ごとの役割を明確にする。");
-  lines.push((app.rating ?? 0) >= 4.5 ? "トーン: 高評価アプリらしく、信頼感と完成度を前面に出す。" : "トーン: 過度な実績訴求より、使い方の分かりやすさを優先する。");
-  return lines;
 }
 
 function layerDisplayName(id: string, name?: string) {
@@ -158,18 +134,53 @@ export function StudioApp() {
   const [projectDir, setProjectDir] = useState<string | null>(null);
   const t = messagesFor(locale);
   const agentName = agentNameById(selectedAgentId);
+  const loadProject = state.loadProject;
 
   useEffect(() => {
     setLocale(resolveBrowserLocale(window.navigator.language));
     const savedAgent = window.localStorage.getItem(SELECTED_AGENT_KEY);
     if (savedAgent) setSelectedAgentId(savedAgent);
+    const queryDir = new URLSearchParams(window.location.search).get("projectDir");
+    if (queryDir) {
+      window.localStorage.setItem(SELECTED_PROJECT_DIR_KEY, queryDir);
+      window.localStorage.setItem(ONBOARDING_DISMISSED_KEY, "true");
+      setProjectDir(queryDir);
+      setShowOnboarding(false);
+      return;
+    }
     const savedDir = window.localStorage.getItem(SELECTED_PROJECT_DIR_KEY);
-    if (savedDir) setProjectDir(savedDir);
     const dismissed = window.localStorage.getItem(ONBOARDING_DISMISSED_KEY) === "true";
-    if (!dismissed) setShowOnboarding(true);
-  }, []);
+    if (savedDir) {
+      setProjectDir(savedDir);
+      if (!dismissed) window.localStorage.setItem(ONBOARDING_DISMISSED_KEY, "true");
+      return;
+    }
 
-  const loadProject = state.loadProject;
+    let active = true;
+    fetch("/api/project")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((json: { project?: StoreShotProject; dir?: string } | null) => {
+        if (!active) return;
+        if (json?.project) {
+          loadProject(json.project);
+          if (json.dir) {
+            window.localStorage.setItem(SELECTED_PROJECT_DIR_KEY, json.dir);
+            setProjectDir(json.dir);
+          }
+          window.localStorage.setItem(ONBOARDING_DISMISSED_KEY, "true");
+          setShowOnboarding(false);
+          return;
+        }
+        if (!dismissed) setShowOnboarding(true);
+      })
+      .catch(() => {
+        if (active && !dismissed) setShowOnboarding(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loadProject]);
+
   useEffect(() => {
     if (!projectDir) return;
     let active = true;
@@ -185,11 +196,23 @@ export function StudioApp() {
   }, [projectDir, loadProject]);
 
   function completeOnboarding(result: OnboardingResult) {
+    window.localStorage.setItem(ONBOARDING_DISMISSED_KEY, "true");
     window.localStorage.setItem(SELECTED_AGENT_KEY, result.agentId);
     setSelectedAgentId(result.agentId);
+    if (result.generatedProject) {
+      loadProject(result.generatedProject);
+    }
     if (result.projectDir) {
       window.localStorage.setItem(SELECTED_PROJECT_DIR_KEY, result.projectDir);
       setProjectDir(result.projectDir);
+      if (!result.generatedProject) {
+        fetch(`/api/project?dir=${encodeURIComponent(result.projectDir)}`)
+          .then((response) => (response.ok ? response.json() : null))
+          .then((json: { project?: StoreShotProject } | null) => {
+            if (json?.project) loadProject(json.project);
+          })
+          .catch(() => {});
+      }
     }
     setShowOnboarding(false);
   }
@@ -376,6 +399,7 @@ export function StudioApp() {
           {activePanel === "素材" ? (
             <AssetsPanel
               project={project}
+              projectDir={projectDir}
               t={t}
               selectedLayer={selectedLayer}
               updateLayer={state.updateLayer}
@@ -429,6 +453,8 @@ export function StudioApp() {
               title={t["top.restartSetup"]}
               onClick={() => {
                 window.localStorage.removeItem(ONBOARDING_DISMISSED_KEY);
+                window.localStorage.removeItem(SELECTED_PROJECT_DIR_KEY);
+                setProjectDir(null);
                 setShowOnboarding(true);
               }}
               className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/8"
@@ -495,8 +521,28 @@ export function StudioApp() {
                   const screenshot = project.assets.find((asset) => asset.id === layer.screenshotAssetId);
                   return (
                     <button key={layer.id} onClick={() => state.selectLayer(layer.id)} onContextMenu={(event) => openLayerMenu(event, layer.id)} className={`absolute bg-slate-950 p-1.5 shadow-xl ${selectedLayerIds.includes(layer.id) ? "outline outline-2 outline-teal-400" : ""}`} style={style}>
-                      <div className="grid h-full w-full place-items-center overflow-hidden rounded-[inherit] bg-gradient-to-br from-indigo-50 via-white to-emerald-100 text-slate-500">
-                        {screenshot ? <img src={assetUrl(screenshot.path)} alt="" className="h-full w-full object-cover" /> : <span className="text-[10px] font-bold">{project.app.name}</span>}
+                      <div className="h-full w-full overflow-hidden rounded-[inherit] bg-gradient-to-br from-indigo-50 via-white to-emerald-100 text-slate-500">
+                        {screenshot ? (
+                          <img src={assetUrl(screenshot.path, projectDir)} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full flex-col gap-[4%] p-[8%]">
+                            <div className="rounded-[1.2em] bg-teal-100/80 px-[7%] py-[6%] text-center text-[10px] font-black leading-tight text-teal-800">
+                              {project.app.name}
+                            </div>
+                            <div className="rounded-full bg-slate-900/10 p-[5%]">
+                              <div className="h-[0.6em] w-1/2 rounded-full bg-teal-700/35" />
+                            </div>
+                            <div className="rounded-[1.4em] bg-white p-[7%] shadow-sm">
+                              <div className="mb-[7%] h-[0.7em] w-2/3 rounded-full bg-slate-900/70" />
+                              <div className="mb-[6%] h-[0.48em] w-5/6 rounded-full bg-slate-500/25" />
+                              <div className="h-[1.3em] w-1/2 rounded-full bg-teal-400/20" />
+                            </div>
+                            <div className="rounded-[1.2em] bg-indigo-50 p-[7%]">
+                              <div className="mb-[6%] h-[0.55em] w-3/4 rounded-full bg-indigo-600/35" />
+                              <div className="h-[0.45em] w-1/2 rounded-full bg-slate-500/25" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </button>
                   );
@@ -505,7 +551,7 @@ export function StudioApp() {
                   const asset = [...project.assets, ...project.generatedImageAssets].find((item) => item.id === layer.assetId);
                   return (
                     <button key={layer.id} onClick={() => state.selectLayer(layer.id)} onContextMenu={(event) => openLayerMenu(event, layer.id)} className={`absolute overflow-hidden shadow-xl ${selectedLayerIds.includes(layer.id) ? "outline outline-2 outline-teal-400" : ""}`} style={style}>
-                      {asset ? <img src={assetUrl(asset.path)} alt="" className="h-full w-full object-cover" /> : null}
+                      {asset ? <img src={assetUrl(asset.path, projectDir)} alt="" className="h-full w-full object-cover" /> : null}
                     </button>
                   );
                 }
@@ -1054,6 +1100,7 @@ async function extractImagePalette(src: string): Promise<string[]> {
 
 function AssetsPanel({
   project,
+  projectDir,
   t,
   selectedLayer,
   updateLayer,
@@ -1063,6 +1110,7 @@ function AssetsPanel({
   setExportFiles
 }: {
   project: StoreShotProject;
+  projectDir: string | null;
   t: StudioMessages;
   selectedLayer: Layer | undefined;
   updateLayer: (layerId: string, patch: Partial<Layer>) => void;
@@ -1103,7 +1151,7 @@ function AssetsPanel({
   async function objectifyAsset(asset: StoreShotProject["assets"][number]) {
     setObjectifyStatus(`${asset.id} を解析中...`);
     try {
-      const colors = await extractImagePalette(assetUrl(asset.path));
+      const colors = await extractImagePalette(assetUrl(asset.path, projectDir));
       createObjectLayersFromAsset(asset, colors);
       setObjectifyStatus(`${asset.id} から編集可能なオブジェクトを作成しました。`);
     } catch {
@@ -1141,7 +1189,7 @@ function AssetsPanel({
         {assets.map((asset) => (
           <div key={`${asset.id}-${asset.path}`} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
             <div className="flex gap-3">
-              <img src={assetUrl(asset.path)} alt="" className="h-14 w-14 shrink-0 rounded-md border border-white/10 object-cover" />
+              <img src={assetUrl(asset.path, projectDir)} alt="" className="h-14 w-14 shrink-0 rounded-md border border-white/10 object-cover" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium text-white">{asset.id}</div>
                 <div className="mt-1 break-all text-xs text-slate-500">{asset.path}</div>

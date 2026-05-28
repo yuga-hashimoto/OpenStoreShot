@@ -24,6 +24,37 @@ describe("buildGenerationPrompt", () => {
     expect(prompt).toContain("INSPIRATION ONLY");
   });
 
+  it("carries reference design patterns into the agent prompt", () => {
+    const prompt = buildGenerationPrompt({
+      references: [
+        {
+          appName: "ScreenFlow",
+          category: "Productivity",
+          platform: "ios",
+          rating: 4.7,
+          screenshotUrls: ["https://example.com/1.png"],
+          patterns: {
+            recommendedPattern: "message-conversation + object-cutout",
+            composition: "screenshot-led composition with compact headline",
+            colorMood: "light neutral with teal accent",
+            deviceFraming: "large detailed app surface",
+            heroMotif: "chat thread plus generated image/output card",
+            appSurfaceDetails: "prompt input, answer bubbles, generated preview"
+          }
+        }
+      ],
+      hasProject: false
+    });
+    expect(prompt).toContain("reference pattern to adapt");
+    expect(prompt).toContain("recommendedPattern");
+    expect(prompt).toContain("Reference pattern fields");
+    expect(prompt).toContain("heroMotif");
+    expect(prompt).toContain("appSurfaceDetails");
+    expect(prompt).toContain("screenshot-led composition");
+    expect(prompt).toContain("light neutral with teal accent");
+    expect(prompt).toContain("https://example.com/1.png");
+  });
+
   it("forbids inventing references when none were selected", () => {
     const prompt = buildGenerationPrompt({ references: [], hasProject: false });
     expect(prompt).toContain("Do NOT invent placeholder references");
@@ -69,5 +100,43 @@ describe("buildGenerationPrompt", () => {
     expect(prompt).toContain("REQUIRE `id`");
     // template contains a valid skeleton
     expect(prompt).toContain('"schemaVersion": "0.1.0"');
+  });
+
+  it("rejects generic phone-only screenshot designs", () => {
+    const prompt = buildGenerationPrompt({ references: [], hasProject: false });
+    expect(prompt).toContain("Do NOT output plain slides");
+    expect(prompt).toContain("at least 10 visible layers");
+    expect(prompt).toContain("credible fictional app UI");
+    expect(prompt).toContain("inside or overlap the device screen");
+    expect(prompt).toContain("one shared brand palette");
+    expect(prompt).toContain("primary phone/app-surface scale and baseline consistent");
+    expect(prompt).toContain("composition archetypes");
+    expect(prompt).toContain("visibly non-phone-led");
+    expect(prompt).toContain("Codex imagegen");
+    expect(prompt).toContain("generatedImageAssets");
+  });
+
+  it("includes the store screenshot catalog including panorama and live audio patterns", () => {
+    const prompt = buildGenerationPrompt({ references: [], hasProject: false });
+    expect(prompt).toContain("Store screenshot pattern catalog");
+    expect(prompt).toContain("three-panel-panorama");
+    expect(prompt).toContain("at least two repeated `panorama-*` layer IDs");
+    expect(prompt).toContain("at least 1.8x the artboard width");
+    expect(prompt).toContain("Panorama blueprint");
+    expect(prompt).toContain("x position must move left from slide 1 to 2 to 3");
+    expect(prompt).toContain("card-led-dashboard");
+    expect(prompt).toContain("commerce-coupon");
+    expect(prompt).toContain("dark-premium");
+    expect(prompt).toContain("audio-live-gradient");
+  });
+
+  it("requires reference-specific motifs across every slide", () => {
+    const prompt = buildGenerationPrompt({ references: [], hasProject: false });
+    expect(prompt).toContain("Reference fidelity bar");
+    expect(prompt).toContain("reference-specific motif");
+    expect(prompt).toContain("repeat across all slides");
+    expect(prompt).toContain("`generatedImageAssets` item");
+    expect(prompt).toContain("AI/chat/generation app");
+    expect(prompt).toContain("generated output itself the hero");
   });
 });

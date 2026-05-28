@@ -3,12 +3,13 @@ export interface AgentDef {
   name: string;
   bin: string;
   recommended?: boolean;
+  supportsDesignGeneration?: boolean;
 }
 
 export const agentDefs: AgentDef[] = [
-  { id: "codex", name: "Codex CLI", bin: "codex", recommended: true },
+  { id: "codex", name: "Codex CLI", bin: "codex", recommended: true, supportsDesignGeneration: true },
   { id: "claude", name: "Claude Code", bin: "claude" },
-  { id: "antigravity", name: "Antigravity CLI", bin: "agy" },
+  { id: "antigravity", name: "Antigravity CLI", bin: "agy", supportsDesignGeneration: true },
   { id: "gemini", name: "Gemini CLI", bin: "gemini" },
   { id: "opencode", name: "OpenCode", bin: "opencode" },
   { id: "cursor-agent", name: "Cursor Agent", bin: "cursor-agent" },
@@ -34,6 +35,7 @@ export interface AgentInvocation {
   args: string[];
   /** When set, the prompt is delivered via stdin instead of an argv entry. */
   input?: string;
+  outputFile?: string;
 }
 
 /**
@@ -41,14 +43,29 @@ export interface AgentInvocation {
  * agent can write storeshot.project.json without prompting. Returns null for
  * manual mode or unknown agents.
  */
-export function buildAgentInvocation(agentId: string, prompt: string): AgentInvocation | null {
+export function buildAgentInvocation(agentId: string, prompt: string, options?: { jsonResponse?: boolean }): AgentInvocation | null {
+  const codexOutputFile = ".storeshot-agent-output.txt";
   switch (agentId) {
     case "claude":
       return { bin: "claude", args: ["-p", "--dangerously-skip-permissions"], input: prompt };
     case "antigravity":
       return { bin: "agy", args: ["-p", "--dangerously-skip-permissions"], input: prompt };
     case "codex":
-      return { bin: "codex", args: ["exec", "--dangerously-bypass-approvals-and-sandbox"], input: prompt };
+      return {
+        bin: "codex",
+        args: [
+          "exec",
+          "--dangerously-bypass-approvals-and-sandbox",
+          "--skip-git-repo-check",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          ...(options?.jsonResponse ? ["--output-last-message", codexOutputFile] : []),
+          "-"
+        ],
+        input: prompt,
+        ...(options?.jsonResponse ? { outputFile: codexOutputFile } : {})
+      };
     case "gemini":
       return { bin: "gemini", args: ["--yolo", "-p", prompt] };
     case "qwen":

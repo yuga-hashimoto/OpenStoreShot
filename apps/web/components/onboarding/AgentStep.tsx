@@ -15,7 +15,7 @@ interface AgentStepProps {
 
 export function AgentStep({ t, agents, selectedAgentId, onSelect }: AgentStepProps) {
   const agentOptions: Array<{ id: string; name: string; available: boolean; version: string | null; recommended?: boolean }> = [
-    ...(agents ?? []),
+    ...((agents ?? []).filter((agent) => agent.supportsDesignGeneration)),
     { id: MANUAL_AGENT_ID, name: t["onboarding.agentManual"], available: true, version: null }
   ];
 
@@ -23,6 +23,9 @@ export function AgentStep({ t, agents, selectedAgentId, onSelect }: AgentStepPro
     <section>
       <div className="mb-1 text-sm font-semibold text-white">{t["onboarding.agentTitle"]}</div>
       <p className="mb-3 text-xs leading-5 text-slate-400">{t["onboarding.agentNote"]}</p>
+      <p className="mb-3 rounded-md border border-teal-300/20 bg-teal-300/[0.06] px-3 py-2 text-xs leading-5 text-teal-100">
+        {t["onboarding.agentDesignOnly"]}
+      </p>
       {agents === null ? (
         <div className="py-3 text-xs text-slate-500">{t["onboarding.agentDetecting"]}</div>
       ) : (
